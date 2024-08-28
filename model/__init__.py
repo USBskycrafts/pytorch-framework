@@ -1,7 +1,5 @@
-from .nlp.BasicBert import BasicBert
 
 model_list = {
-    "BasicBert": BasicBert
 }
 
 
