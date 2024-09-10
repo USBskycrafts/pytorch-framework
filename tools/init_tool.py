@@ -1,16 +1,16 @@
 import logging
 import torch
-
+import os
 from reader.reader import init_dataset, init_formatter, init_test_dataset
 from model import get_model
 from model.optimizer import init_optimizer
 from .output_init import init_output_function
+from tensorboardX import SummaryWriter
 
 logger = logging.getLogger(__name__)
-
+result = {}
 
 def init_all(config, gpu_list, checkpoint, mode, *args, **params):
-    result = {}
 
     logger.info("Begin to initialize dataset and formatter...")
     if mode == "train":
@@ -56,7 +56,10 @@ def init_all(config, gpu_list, checkpoint, mode, *args, **params):
         else:
             logger.warning(information)
 
+    writer = SummaryWriter(os.path.join(config.get("output", "tensorboard_path"), config.get("output", "model_name")),
+                           config.get("output", "model_name"))
     result["model"] = model
+    result["writer"] = writer
     if mode == "train":
         result["optimizer"] = optimizer
         result["trained_epoch"] = trained_epoch

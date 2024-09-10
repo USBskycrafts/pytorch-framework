@@ -1,7 +1,6 @@
 import logging
 import torch
 from ignite.metrics import PSNR, SSIM
-from ignite.engine import Engine
 logger = logging.Logger(__name__)
 
 
@@ -164,17 +163,15 @@ def single_label_top2_accuracy(outputs, label, config, result=None):
     return result
 
 
-def ssim_accuracy(ignite_eg: Engine, outputs: torch.Tensor, ground_truth: torch.Tensor, config) -> float:
+def ssim_accuracy( outputs: torch.Tensor, ground_truth: torch.Tensor, config) -> str:
     data_range = config.getint("data", "normalization")
     metric = SSIM(data_range=data_range)
-    metric.attach(ignite_eg, "ssim")
-    ignite_eg.run([outputs, ground_truth])
-    return ignite_eg.state.metrics["ssim"]
+    metric.update([outputs, ground_truth])
+    return f"{metric.compute():<5}"
 
-
-def psnr_accuracy(ignite_eg: Engine, outputs: torch.Tensor, ground_truth: torch.Tensor, config) -> float:
+def psnr_accuracy(outputs: torch.Tensor, ground_truth: torch.Tensor, config) -> str:
     data_range = config.getint("data", "normalization")
     metric = PSNR(data_range=data_range)
-    metric.attach(ignite_eg, "psnr")
-    ignite_eg.run([outputs, ground_truth])
-    return ignite_eg.state.metrics["psnr"]
+    metric.update([outputs, ground_truth])
+    return f"{metric.compute():<5}%"
+    

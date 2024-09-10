@@ -25,6 +25,10 @@ if __name__ == "__main__":
     configFilePath = args.config
 
     config = create_config(configFilePath)
+    if config.getboolean("distributed", "use"):
+        torch.distributed.init_process_group(
+            backend=config.get("distributed", "backend")
+        )
 
     use_gpu = True
     gpu_list = []

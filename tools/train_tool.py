@@ -3,7 +3,6 @@ import os
 import torch
 from torch.autograd import Variable
 from torch.optim import lr_scheduler
-from tensorboardX import SummaryWriter
 import shutil
 from timeit import default_timer as timer
 
@@ -47,6 +46,7 @@ def train(parameters, config, gpu_list, do_test=False):
     dataset = parameters["train_dataset"]
     global_step = parameters["global_step"]
     output_function = parameters["output_function"]
+    writer = parameters["writer"]
 
     if do_test:
         init_formatter(config, ["test"])
@@ -59,8 +59,6 @@ def train(parameters, config, gpu_list, do_test=False):
     os.makedirs(os.path.join(config.get("output", "tensorboard_path"), config.get("output", "model_name")),
                 exist_ok=True)
 
-    writer = SummaryWriter(os.path.join(config.get("output", "tensorboard_path"), config.get("output", "model_name")),
-                           config.get("output", "model_name"))
 
     step_size = config.getint("train", "step_size")
     gamma = config.getfloat("train", "lr_multiplier")

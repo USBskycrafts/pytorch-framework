@@ -3,7 +3,7 @@ import os
 import functools
 
 
-class ConfigParser:
+class ConfigParser(configparser.RawConfigParser):
     def __init__(self, *args, **params):
         self.default_config = configparser.RawConfigParser(*args, **params)
         self.local_config = configparser.RawConfigParser(*args, **params)
