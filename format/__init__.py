@@ -1,9 +1,10 @@
 import logging
-
+from .BRATS2020.NIFTI1Formmater import NIFTI1Formatter
 
 logger = logging.getLogger(__name__)
 
 formatter_list = {
+    "NIFTI": NIFTI1Formatter
 }
 
 
@@ -23,5 +24,6 @@ def init_formatter(config, mode, *args, **params):
 
         return formatter
     else:
-        logger.error("There is no formatter called %s, check your config." % which)
+        logger.error(
+            "There is no formatter called %s, check your config." % which)
         raise NotImplementedError
