@@ -25,7 +25,8 @@ def checkpoint(filename, model, optimizer, trained_epoch, config, global_step):
     try:
         torch.save(save_params, filename)
     except Exception as e:
-        logger.warning("Cannot save models with error %s, continue anyway" % str(e))
+        logger.warning(
+            "Cannot save models with error %s, continue anyway" % str(e))
 
 
 def train(parameters, config, gpu_list, do_test=False):
@@ -35,9 +36,11 @@ def train(parameters, config, gpu_list, do_test=False):
     output_time = config.getint("output", "output_time")
     test_time = config.getint("output", "test_time")
 
-    output_path = os.path.join(config.get("output", "model_path"), config.get("output", "model_name"))
+    output_path = os.path.join(config.get(
+        "output", "model_path"), config.get("output", "model_name"))
     if os.path.exists(output_path):
-        logger.warning("Output path exists, check whether need to change a name of model")
+        logger.warning(
+            "Output path exists, check whether need to change a name of model")
     os.makedirs(output_path, exist_ok=True)
 
     trained_epoch = parameters["trained_epoch"] + 1
@@ -59,11 +62,10 @@ def train(parameters, config, gpu_list, do_test=False):
     os.makedirs(os.path.join(config.get("output", "tensorboard_path"), config.get("output", "model_name")),
                 exist_ok=True)
 
-
     step_size = config.getint("train", "step_size")
     gamma = config.getfloat("train", "lr_multiplier")
-    exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
-    exp_lr_scheduler.step(trained_epoch)
+    exp_lr_scheduler = lr_scheduler.StepLR(
+        optimizer, step_size=step_size, gamma=gamma)
 
     logger.info("Training start....")
 
@@ -102,6 +104,7 @@ def train(parameters, config, gpu_list, do_test=False):
 
             loss.backward()
             optimizer.step()
+            exp_lr_scheduler.step(trained_epoch)
 
             if step % output_time == 0:
                 output_info = output_function(acc_result, config)
@@ -110,19 +113,21 @@ def train(parameters, config, gpu_list, do_test=False):
 
                 output_value(current_epoch, "train", "%d/%d" % (step + 1, total_len), "%s/%s" % (
                     gen_time_str(delta_t), gen_time_str(delta_t * (total_len - step - 1) / (step + 1))),
-                             "%.3lf" % (total_loss / (step + 1)), output_info, '\r', config)
+                    "%.3lf" % (total_loss / (step + 1)), output_info, '\r', config)
 
             global_step += 1
-            writer.add_scalar(config.get("output", "model_name") + "_train_iter", float(loss), global_step)
-            
+            writer.add_scalar(config.get("output", "model_name") +
+                              "_train_iter", float(loss), global_step)
+
         output_info = output_function(acc_result, config)
         delta_t = timer() - start_time
         output_value(current_epoch, "train", "%d/%d" % (step + 1, total_len), "%s/%s" % (
             gen_time_str(delta_t), gen_time_str(delta_t * (total_len - step - 1) / (step + 1))),
-                     "%.3lf" % (total_loss / (step + 1)), output_info, None, config)
+            "%.3lf" % (total_loss / (step + 1)), output_info, None, config)
 
         if step == -1:
-            logger.error("There is no data given to the model in this epoch, check your data.")
+            logger.error(
+                "There is no data given to the model in this epoch, check your data.")
             raise NotImplementedError
 
         checkpoint(os.path.join(output_path, "%d.pkl" % current_epoch), model, optimizer, current_epoch, config,
@@ -132,6 +137,8 @@ def train(parameters, config, gpu_list, do_test=False):
 
         if current_epoch % test_time == 0:
             with torch.no_grad():
-                valid(model, parameters["valid_dataset"], current_epoch, writer, config, gpu_list, output_function)
+                valid(model, parameters["valid_dataset"], current_epoch,
+                      writer, config, gpu_list, output_function)
                 if do_test:
-                    valid(model, test_dataset, current_epoch, writer, config, gpu_list, output_function, mode="test")
+                    valid(model, test_dataset, current_epoch, writer,
+                          config, gpu_list, output_function, mode="test")
