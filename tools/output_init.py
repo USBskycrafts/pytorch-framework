@@ -1,8 +1,9 @@
-from .output_tool import basic_output_function, null_output_function
+from .output_tool import basic_output_function, null_output_function, general_image_metrics
 
 output_function_dic = {
     "Basic": basic_output_function,
-    "Null": null_output_function
+    "Null": null_output_function,
+    "VISION": general_image_metrics
 }
 
 

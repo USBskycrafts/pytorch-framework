@@ -5,6 +5,7 @@ from torch.autograd import Variable
 from torch.optim import lr_scheduler
 from tensorboardX import SummaryWriter
 from timeit import default_timer as timer
+from colorama import Fore, Back, Style
 
 logger = logging.getLogger(__name__)
 
@@ -21,23 +22,22 @@ def output_value(epoch, mode, step, time, loss, info, end, config):
         delimiter = config.get("output", "delimiter")
     except Exception as e:
         delimiter = " "
-    s = ""
-    s = s + str(epoch) + " "
-    while len(s) < 7:
-        s += " "
-    s = s + str(mode) + " "
-    while len(s) < 14:
-        s += " "
-    s = s + str(step) + " "
-    while len(s) < 25:
-        s += " "
-    s += str(time)
-    while len(s) < 40:
-        s += " "
-    s += str(loss)
-    while len(s) < 48:
-        s += " "
-    s += str(info)
+    try:
+        delimiter = config.get("output", "delimiter")
+    except Exception as e:
+        delimiter = " "
+    color = {
+        "train": Fore.RED,
+        "valid": Fore.GREEN,
+        "test": Fore.BLUE
+    }
+    s = color.get(mode, Fore.YELLOW) + Style.BRIGHT
+    s += "{:<5}".format(str(epoch)) + " "
+    s += "{:<5}".format(str(mode)) + " "
+    s += "{:<15}".format(str(step)) + " "
+    s += "{:<15}".format(str(time)) + " "
+    s += "{:<15}".format(str(loss) + " ")
+    s += str(info) + Style.RESET_ALL
     s = s.replace(" ", delimiter)
     if not (end is None):
         print(s, end=end)
