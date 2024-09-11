@@ -104,7 +104,7 @@ def train(parameters, config, gpu_list, do_test=False):
 
             loss.backward()
             optimizer.step()
-            exp_lr_scheduler.step(trained_epoch)
+            exp_lr_scheduler.step()
 
             if step % output_time == 0:
                 output_info = output_function(acc_result, config)
