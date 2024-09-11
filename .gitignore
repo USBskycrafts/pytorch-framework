@@ -1,4 +1,6 @@
 *~
+*.amax
+*.pkl
 *swp
 *swo
 .idea
@@ -8,6 +10,3 @@ __pycache__
 
 config/default_local.config
 
-temp
-notebook
-result

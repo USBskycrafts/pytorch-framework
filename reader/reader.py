@@ -1,7 +1,7 @@
 from torch.utils.data import DataLoader
 import logging
 
-import formatter as form
+import format as form
 from dataset import dataset_list
 
 logger = logging.getLogger(__name__)
@@ -55,17 +55,20 @@ def init_one_dataset(config, mode, *args, **params):
             try:
                 batch_size = config.getint("eval", "batch_size")
             except Exception as e:
-                logger.warning("[eval] batch size has not been defined in config file, use [train] batch_size instead.")
+                logger.warning(
+                    "[eval] batch size has not been defined in config file, use [train] batch_size instead.")
 
             try:
                 shuffle = config.getboolean("eval", "shuffle")
             except Exception as e:
                 shuffle = False
-                logger.warning("[eval] shuffle has not been defined in config file, use false as default.")
+                logger.warning(
+                    "[eval] shuffle has not been defined in config file, use false as default.")
             try:
                 reader_num = config.getint("eval", "reader_num")
             except Exception as e:
-                logger.warning("[eval] reader num has not been defined in config file, use [train] reader num instead.")
+                logger.warning(
+                    "[eval] reader num has not been defined in config file, use [train] reader num instead.")
 
         dataloader = DataLoader(dataset=dataset,
                                 batch_size=batch_size,
@@ -76,7 +79,8 @@ def init_one_dataset(config, mode, *args, **params):
 
         return dataloader
     else:
-        logger.error("There is no dataset called %s, check your config." % which)
+        logger.error(
+            "There is no dataset called %s, check your config." % which)
         raise NotImplementedError
 
 

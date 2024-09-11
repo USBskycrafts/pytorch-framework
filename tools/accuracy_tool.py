@@ -163,11 +163,12 @@ def single_label_top2_accuracy(outputs, label, config, result=None):
     return result
 
 
-def ssim_accuracy( outputs: torch.Tensor, ground_truth: torch.Tensor, config) -> str:
+def ssim_accuracy(outputs: torch.Tensor, ground_truth: torch.Tensor, config) -> str:
     data_range = config.getint("data", "normalization")
     metric = SSIM(data_range=data_range)
     metric.update([outputs, ground_truth])
     return metric.compute()
+
 
 def psnr_accuracy(outputs: torch.Tensor, ground_truth: torch.Tensor, config) -> str:
     data_range = config.getint("data", "normalization")
@@ -182,14 +183,13 @@ def general_image_metrics(outputs: torch.Tensor, ground_truth: torch.Tensor, con
             "PSNR": [],
             "SSIM": []
         }
-    psnr_list = result["PSNR"]
-    ssim_list = result["SSIM"]
     psnr = psnr_accuracy(outputs, ground_truth, config)
     ssim = ssim_accuracy(outputs, ground_truth, config)
-    psnr_list.append(psnr)
-    ssim_list.append(ssim)
-    return {
-        "PSNR": "{:<7.5}".format(sum(psnr_list) / len(psnr_list)),
-        "SSIM": "{:<7.5}".format(sum(ssim_list) / len(ssim_list))
-    }
-    
+    result["PSNR"].append(psnr)
+    result["SSIM"].append(ssim)
+    return result
+    # return {
+    #     "
+    #     # "PSNR": "{:<7.5}".format(sum(psnr_list) / len(psnr_list)),
+    #     # "SSIM": "{:<7.5}".format(sum(ssim_list) / len(ssim_list))
+    # }

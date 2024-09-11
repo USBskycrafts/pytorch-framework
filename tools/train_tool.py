@@ -69,7 +69,8 @@ def train(parameters, config, gpu_list, do_test=False):
 
     logger.info("Training start....")
 
-    print("Epoch  Stage  Iterations  Time Usage    Loss    Output Information")
+    output_value("Epoch",  "Stage", "Iterations", "Time Usage",
+                 "Loss",   "Output Information", '\n', config)
 
     total_len = len(dataset)
     more = ""
@@ -79,8 +80,6 @@ def train(parameters, config, gpu_list, do_test=False):
         model.train()
         start_time = timer()
         current_epoch = epoch_num
-
-        exp_lr_scheduler.step(current_epoch)
 
         acc_result = None
         total_loss = 0

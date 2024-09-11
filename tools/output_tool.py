@@ -1,4 +1,5 @@
 import json
+import numpy as np
 
 from .accuracy_tool import gen_micro_macro_result, general_image_metrics
 
@@ -17,13 +18,13 @@ def basic_output_function(data, config, *args, **params):
     return json.dumps(result, sort_keys=True)
 
 
-
 def vision_output_function(data, config, *args, **params):
     # data is the output from accuracy_tool
     which = config.get("output", "output_value").replace(" ", "").split(",")
     result = {}
     for metric, value in data.items():
         if metric in which:
-            result[metric] = value
+            result[metric + " mean"] = "{:<2.2f}".format(np.mean(value))[:7]
+            result[metric +
+                   " std"] = "{:<2.2f}".format(np.std(value, ddof=1))[:7]
     return json.dumps(result, sort_keys=True)
-        
