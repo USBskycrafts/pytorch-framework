@@ -12,12 +12,12 @@ from tools.init_tool import init_test_dataset, init_formatter
 logger = logging.getLogger(__name__)
 
 
-def checkpoint(filename, model, optimizer, trained_epoch, config, global_step):
-    model_to_save = model.module if hasattr(model, 'module') else model
+def checkpoint(filename, playground, trained_epoch, config, global_step):
+    models = playground.models
+    optimizers = playground.optimizers
     save_params = {
-        "model": model_to_save.state_dict(),
-        "optimizer_name": config.get("train", "optimizer"),
-        "optimizer": optimizer.state_dict(),
+        **{name: model.state_dict() for name, model in models.items()},
+        **{optimizer.__class__.__name__ + name: optimizer.state_dict() for optimizer, name in zip(optimizers, models.keys())},
         "trained_epoch": trained_epoch,
         "global_step": global_step
     }
@@ -44,12 +44,10 @@ def train(parameters, config, gpu_list, do_test=False):
     os.makedirs(output_path, exist_ok=True)
 
     trained_epoch = parameters["trained_epoch"] + 1
-    model = parameters["model"]
-    optimizer = parameters["optimizer"]
+    playground = parameters["playground"]
     dataset = parameters["train_dataset"]
     global_step = parameters["global_step"]
     output_function = parameters["output_function"]
-    writer = parameters["writer"]
 
     if do_test:
         init_formatter(config, ["test"])
@@ -62,11 +60,6 @@ def train(parameters, config, gpu_list, do_test=False):
     os.makedirs(os.path.join(config.get("output", "tensorboard_path"), config.get("output", "model_name")),
                 exist_ok=True)
 
-    step_size = config.getint("train", "step_size")
-    gamma = config.getfloat("train", "lr_multiplier")
-    exp_lr_scheduler = lr_scheduler.StepLR(
-        optimizer, step_size=step_size, gamma=gamma)
-
     logger.info("Training start....")
 
     output_value("Epoch",  "Stage", "Iterations", "Time Usage",
@@ -77,7 +70,6 @@ def train(parameters, config, gpu_list, do_test=False):
     if total_len < 10000:
         more = "\t"
     for epoch_num in range(trained_epoch, epoch):
-        model.train()
         start_time = timer()
         current_epoch = epoch_num
 
@@ -93,17 +85,11 @@ def train(parameters, config, gpu_list, do_test=False):
                         data[key] = Variable(data[key].cuda())
                     else:
                         data[key] = Variable(data[key])
-
-            optimizer.zero_grad()
-
-            results = model(data, config, gpu_list, acc_result, "train")
+            results = playground._train(
+                data, config, gpu_list, acc_result, "train")
 
             loss, acc_result = results["loss"], results["acc_result"]
             total_loss += float(loss)
-
-            loss.backward()
-            optimizer.step()
-            exp_lr_scheduler.step()
 
             if step % output_time == 0:
                 output_info = output_function(acc_result, config)
@@ -115,8 +101,6 @@ def train(parameters, config, gpu_list, do_test=False):
                     "%.3lf" % (total_loss / (step + 1)), output_info, '\r', config)
 
             global_step += 1
-            writer.add_scalar(config.get("output", "model_name") +
-                              "_train_iter", float(loss), global_step)
 
         output_info = output_function(acc_result, config)
         delta_t = timer() - start_time
@@ -129,15 +113,16 @@ def train(parameters, config, gpu_list, do_test=False):
                 "There is no data given to the model in this epoch, check your data.")
             raise NotImplementedError
 
-        checkpoint(os.path.join(output_path, "%d.pkl" % current_epoch), model, optimizer, current_epoch, config,
+        # TODO: warning: define should be modified
+        checkpoint(os.path.join(output_path, "%d.pkl" % current_epoch), playground, current_epoch, config,
                    global_step)
-        writer.add_scalar(config.get("output", "model_name") + "_train_epoch", float(total_loss) / (step + 1),
-                          current_epoch)
 
         if current_epoch % test_time == 0:
             with torch.no_grad():
-                valid(model, parameters["valid_dataset"], current_epoch,
-                      writer, config, gpu_list, output_function)
+                # TODO: warning: define should be modified
+                valid(playground, parameters["valid_dataset"],
+                      current_epoch, config, gpu_list, output_function)
                 if do_test:
-                    valid(model, test_dataset, current_epoch, writer,
+                    # TODO: warning: define should be modified
+                    valid(playground, test_dataset, current_epoch,
                           config, gpu_list, output_function, mode="test")

@@ -45,8 +45,7 @@ def output_value(epoch, mode, step, time, loss, info, end, config):
         print(s)
 
 
-def valid(model, dataset, epoch, writer, config, gpu_list, output_function, mode="valid"):
-    model.eval()
+def valid(playground, dataset, epoch, config, gpu_list, output_function, mode="valid"):
 
     acc_result = None
     total_loss = 0
@@ -69,7 +68,7 @@ def valid(model, dataset, epoch, writer, config, gpu_list, output_function, mode
                 else:
                     data[key] = Variable(data[key])
 
-        results = model(data, config, gpu_list, acc_result, "valid")
+        results = playground._eval(data, config, gpu_list, acc_result, "valid")
 
         loss, acc_result = results["loss"], results["acc_result"]
         total_loss += float(loss)
@@ -80,19 +79,15 @@ def valid(model, dataset, epoch, writer, config, gpu_list, output_function, mode
 
             output_value(epoch, mode, "%d/%d" % (step + 1, total_len), "%s/%s" % (
                 gen_time_str(delta_t), gen_time_str(delta_t * (total_len - step - 1) / (step + 1))),
-                         "%.3lf" % (total_loss / (step + 1)), output_info, '\r', config)
+                "%.3lf" % (total_loss / (step + 1)), output_info, '\r', config)
 
     if step == -1:
-        logger.error("There is no data given to the model in this epoch, check your data.")
+        logger.error(
+            "There is no data given to the model in this epoch, check your data.")
         raise NotImplementedError
 
     delta_t = timer() - start_time
     output_info = output_function(acc_result, config)
     output_value(epoch, mode, "%d/%d" % (step + 1, total_len), "%s/%s" % (
         gen_time_str(delta_t), gen_time_str(delta_t * (total_len - step - 1) / (step + 1))),
-                 "%.3lf" % (total_loss / (step + 1)), output_info, None, config)
-
-    writer.add_scalar(config.get("output", "model_name") + "_eval_epoch", float(total_loss) / (step + 1),
-                      epoch)
-
-    model.train()
+        "%.3lf" % (total_loss / (step + 1)), output_info, None, config)

@@ -167,14 +167,14 @@ def ssim_accuracy(outputs: torch.Tensor, ground_truth: torch.Tensor, config) -> 
     data_range = config.getint("data", "normalization")
     metric = SSIM(data_range=data_range)
     metric.update([outputs, ground_truth])
-    return metric.compute()
+    return metric.compute() * 100
 
 
 def psnr_accuracy(outputs: torch.Tensor, ground_truth: torch.Tensor, config) -> str:
     data_range = config.getint("data", "normalization")
     metric = PSNR(data_range=data_range)
     metric.update([outputs, ground_truth])
-    return metric.compute() * 100
+    return metric.compute()
 
 
 def general_image_metrics(outputs: torch.Tensor, ground_truth: torch.Tensor, config, result=None):

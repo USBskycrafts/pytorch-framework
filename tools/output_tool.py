@@ -24,7 +24,8 @@ def vision_output_function(data, config, *args, **params):
     result = {}
     for metric, value in data.items():
         if metric in which:
-            result[metric + " mean"] = "{:<2.2f}".format(np.mean(value))[:7]
             result[metric +
-                   " std"] = "{:<2.2f}".format(np.std(value, ddof=1))[:7]
+                   " mean"] = "{:<7}".format(f"{np.mean(value):<2.2f}")[:7]
+            result[metric +
+                   " std"] = "{:<7}".format(f"{np.std(value, ddof=1):<2.2f}")[:7]
     return json.dumps(result, sort_keys=True)
