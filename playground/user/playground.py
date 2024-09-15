@@ -1,7 +1,9 @@
-from torch.nn import BCELoss
+from torch.nn import BCELoss, L1Loss
 from playground.playground import Playground
 import torch
 from model.user.net import UserNet
+from tools.accuracy_tool import general_image_metrics
+from model.loss import GramLoss
 
 
 class UserPlayground(Playground):
@@ -13,41 +15,51 @@ class UserPlayground(Playground):
 
         self.generator = models['UserNet']
         self.discriminator = models['discriminator']
-        self.bce_loss = BCELoss()
+        self.l1_loss = L1Loss()
+        self.gram_loss = GramLoss()
 
     def train(self, data, config, gpu_list, acc_result, mode):
-        g_result = self.generator(data, config, gpu_list, acc_result, mode)
-        predict, g_loss = g_result['predict'], g_result['loss']
-        d_result = self.discriminator(
-            {
-                "fake": predict.detach(),
-                "real": data['t1ce']
-            },
-            config, gpu_list, acc_result, mode)
-
-        pred_fake = d_result['pred']['fake']
-        g_loss += self.bce_loss(pred_fake, torch.ones_like(pred_fake))
-        d_loss = d_result['loss']
-
-        self.writer.add_scalar('loss/g_loss', g_loss,
-                               global_step=self.train_step)
-        self.writer.add_scalar('loss/d_loss', d_loss,
-                               global_step=self.train_step)
-
-        return {
-            "losses": [g_loss, d_loss],
-            "acc_result": g_result['acc_result']
+        pred = self.generator(torch.cat([data['t1'], data['t2']], dim=1))
+        target = data['t1ce']
+        fake_features = self.discriminator(pred)
+        g_loss = self.l1_loss(
+            pred, target) + self.l1_loss(fake_features[-1], torch.ones_like(fake_features[-1]))
+        acc_result = general_image_metrics(pred, target, config, acc_result)
+        yield {
+            "name": "UserNet",
+            "loss": g_loss,
+            "acc_result": acc_result
         }
+        fake_features = self.discriminator(pred.detach())
+        target_features = self.discriminator(target)
+        d_loss = 0.5 * (self.l1_loss(fake_features[-1],
+                                     torch.zeros_like(fake_features[-1]))
+                        + self.l1_loss(target_features[-1],
+                                       torch.ones_like(target_features[-1])))
+        d_loss += self.gram_loss(fake_features, target_features)
+        yield {
+            "name": "discriminator",
+            "loss": d_loss,
+            "acc_result": acc_result
+        }
+        self.writer.add_scalar("UserNet", g_loss, self.train_step)
+        self.writer.add_scalar("discriminator", d_loss, self.train_step)
 
     def test(self, data, config, gpu_list, acc_result, mode):
-        g_result = self.generator(data, config, gpu_list, acc_result, mode)
-        return g_result
+        pred = self.generator(torch.cat([data['t1'], data['t2']], dim=1))
+        target = data['t1ce']
+        acc_result = general_image_metrics(pred, target, config, acc_result)
+        return {
+            "output": [acc_result],
+            "acc_result": acc_result
+        }
 
     def eval(self, data, config, gpu_list, acc_result, mode):
-        g_result = self.generator(data, config, gpu_list, acc_result, mode)
-        self.writer.add_scalar('loss/g_loss', g_result['loss'],
-                               global_step=self.eval_step)
+        pred = self.generator(torch.cat([data['t1'], data['t2']], dim=1))
+        target = data['t1ce']
+        loss = self.l1_loss(pred, target)
+        acc_result = general_image_metrics(pred, target, config, acc_result)
         return {
-            **g_result,
-            "losses": [g_result['loss']],
+            "loss": loss,
+            "acc_result": acc_result
         }
