@@ -29,8 +29,8 @@ def init_all(config, gpu_list, checkpoint, mode, *args, **params):
     model_name = config.get("model", "model_name").replace(" ", "").split(",")
     models = {name: get_model(name)(
         config, gpu_list, *args, **params) for name in model_name}
-    optimizers = [init_optimizer(model, config, *args, **params)
-                  for model in models.values()]
+    optimizers = {model_name: init_optimizer(model, config, *args, **params)
+                  for model_name, model in models.items()}
     trained_epoch = 0
     global_step = 0
 
@@ -53,7 +53,7 @@ def init_all(config, gpu_list, checkpoint, mode, *args, **params):
         if mode == "train":
             trained_epoch = parameters["trained_epoch"]
             if config.get("train", "optimizer") == parameters["optimizer_name"]:
-                for optimizer, model_name in zip(optimizers, models.keys()):
+                for model_name, optimizer in optimizers.items():
                     optimizer.load_state_dict(
                         parameters[optimizer.__class__.__name__ + model_name])
             else:

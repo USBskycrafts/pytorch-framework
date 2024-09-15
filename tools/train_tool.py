@@ -17,7 +17,7 @@ def checkpoint(filename, playground, trained_epoch, config, global_step):
     optimizers = playground.optimizers
     save_params = {
         **{name: model.state_dict() for name, model in models.items()},
-        **{optimizer.__class__.__name__ + name: optimizer.state_dict() for optimizer, name in zip(optimizers, models.keys())},
+        **{optimizer.__class__.__name__ + name: optimizer.state_dict() for name, optimizer in optimizers.items()},
         "trained_epoch": trained_epoch,
         "global_step": global_step
     }

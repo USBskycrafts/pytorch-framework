@@ -16,8 +16,8 @@ class Playground:
 
         step_size = config.getint("train", "step_size")
         gamma = config.getfloat("train", "lr_multiplier")
-        self.schedulers = list(map(lambda optimizer: lr_scheduler.StepLR(
-            optimizer, step_size=step_size, gamma=gamma), self.optimizers))
+        self.schedulers = {model_name: lr_scheduler.StepLR(
+            optimizer, step_size=step_size, gamma=gamma) for model_name, optimizer in self.optimizers.items()}
         self.writer = writer
         self.train_step = 0
         self.test_step = 0
@@ -28,15 +28,18 @@ class Playground:
 
     def _train(self, *args, **kwargs):
         map(lambda model: model.train(), self.models.values())
-        map(lambda optimizer: optimizer.zero_grad(), self.optimizers)
-        result = self.train(*args, **kwargs)
+        trainer = self.train(*args, **kwargs)
         self.train_step += 1
-        losses, acc_result = result["losses"], result["acc_result"]
-        map(lambda loss: loss.backward(), losses)
-        map(lambda optimizer: optimizer.step(), self.optimizers)
-        map(lambda scheduler: scheduler.step(), self.schedulers)
+        loss = []
+        for result in trainer:
+            self.optimizers[result["name"]].zero_grad()
+            _loss, acc_result = result["loss"], result["acc_result"]
+            loss.append(_loss)
+            _loss.backward()
+            self.optimizers[result["name"]].step()
+            self.schedulers[result["name"]].step()
         return {
-            "loss": sum([loss.float() for loss in losses]),
+            "loss": sum(loss),
             "acc_result": acc_result
         }
 
@@ -45,7 +48,7 @@ class Playground:
 
     def _test(self, *args, **kwargs):
         map(lambda model: model.eval(), self.models.values())
-        result = self.test(*args, **kwargs)["output"]
+        result = self.test(*args, **kwargs)
         self.test_step += 1
         return result
 
@@ -56,8 +59,8 @@ class Playground:
         map(lambda model: model.eval(), self.models.values())
         result = self.eval(*args, **kargs)
         self.eval_step += 1
-        losses, acc_result = result["losses"], result["acc_result"]
+        loss, acc_result = result["loss"], result["acc_result"]
         return {
-            "loss": sum([loss.float() for loss in losses]),
+            "loss": loss,
             "acc_result": acc_result
         }
