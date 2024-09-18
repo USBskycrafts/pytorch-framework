@@ -6,6 +6,7 @@ from torch.optim import lr_scheduler
 from tensorboardX import SummaryWriter
 from timeit import default_timer as timer
 from colorama import Fore, Back, Style
+from tools.init_tool import result
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +57,8 @@ def valid(model, dataset, epoch, writer, config, gpu_list, output_function, mode
     output_info = ""
 
     output_time = config.getint("output", "output_time")
+    print_time = config.getint("output", "print_time")
+    test_time = config.getint("output", "test_time")
     step = -1
     more = ""
     if total_len < 10000:
@@ -80,17 +83,25 @@ def valid(model, dataset, epoch, writer, config, gpu_list, output_function, mode
 
             output_value(epoch, mode, "%d/%d" % (step + 1, total_len), "%s/%s" % (
                 gen_time_str(delta_t), gen_time_str(delta_t * (total_len - step - 1) / (step + 1))),
-                         "%.3lf" % (total_loss / (step + 1)), output_info, '\r', config)
+                "%.3lf" % (total_loss / (step + 1)), output_info, '\r', config)
+
+        if epoch % test_time == 0 and step % print_time == 0:
+            printer = result["printer"]
+            printer({
+                **data,
+                "pred": results["pred"]
+            }, step)
 
     if step == -1:
-        logger.error("There is no data given to the model in this epoch, check your data.")
+        logger.error(
+            "There is no data given to the model in this epoch, check your data.")
         raise NotImplementedError
 
     delta_t = timer() - start_time
     output_info = output_function(acc_result, config)
     output_value(epoch, mode, "%d/%d" % (step + 1, total_len), "%s/%s" % (
         gen_time_str(delta_t), gen_time_str(delta_t * (total_len - step - 1) / (step + 1))),
-                 "%.3lf" % (total_loss / (step + 1)), output_info, None, config)
+        "%.3lf" % (total_loss / (step + 1)), output_info, None, config)
 
     writer.add_scalar(config.get("output", "model_name") + "_eval_epoch", float(total_loss) / (step + 1),
                       epoch)
