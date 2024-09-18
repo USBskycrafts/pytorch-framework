@@ -1,5 +1,7 @@
+from .symbiosis.net import Symbiosis
 
 model_list = {
+    "symbiosis": Symbiosis
 }
 
 
