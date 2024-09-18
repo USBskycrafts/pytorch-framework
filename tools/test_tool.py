@@ -22,6 +22,7 @@ def test(parameters, config, gpu_list):
     output_info = "testing"
 
     output_time = config.getint("output", "output_time")
+    print_time = config.getint("output", "print_time")
     step = -1
     result = []
 
@@ -42,16 +43,23 @@ def test(parameters, config, gpu_list):
 
             output_value(0, "test", "%d/%d" % (step + 1, total_len), "%s/%s" % (
                 gen_time_str(delta_t), gen_time_str(delta_t * (total_len - step - 1) / (step + 1))),
-                         "%.3lf" % (total_loss / (step + 1)), output_info, '\r', config)
+                "%.3lf" % (total_loss / (step + 1)), output_info, '\r', config)
+        if step % print_time == 0:
+            printer = parameters["printer"]
+            printer({
+                **data,
+                "pred": results["pred"],
+            }, step)
 
     if step == -1:
-        logger.error("There is no data given to the model in this epoch, check your data.")
+        logger.error(
+            "There is no data given to the model in this epoch, check your data.")
         raise NotImplementedError
 
     delta_t = timer() - start_time
     output_info = "testing"
     output_value(0, "test", "%d/%d" % (step + 1, total_len), "%s/%s" % (
         gen_time_str(delta_t), gen_time_str(delta_t * (total_len - step - 1) / (step + 1))),
-                 "%.3lf" % (total_loss / (step + 1)), output_info, None, config)
+        "%.3lf" % (total_loss / (step + 1)), output_info, None, config)
 
     return result

@@ -13,9 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 def checkpoint(filename, model, optimizer, trained_epoch, config, global_step):
-    model_to_save = model.module if hasattr(model, 'module') else model
     save_params = {
-        "model": model_to_save.state_dict(),
+        "model": model.state_dict(),
         "optimizer_name": config.get("train", "optimizer"),
         "optimizer": optimizer.state_dict(),
         "trained_epoch": trained_epoch,
