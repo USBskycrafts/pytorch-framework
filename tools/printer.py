@@ -15,9 +15,9 @@ class Printer:
         self.futures = []
 
     def __call__(self, *args, **kwargs):
-        future = self.processor.submit(self.print, *args, **kwargs)
-        self.futures.append(future)
-        # self.print(*args, **kwargs)
+        # future = self.processor.submit(self.print, *args, **kwargs)
+        # self.futures.append(future)
+        self.print(*args, **kwargs)
 
     def __del__(self):
         for future in self.futures:
