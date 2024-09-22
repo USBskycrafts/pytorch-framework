@@ -26,7 +26,7 @@ class Symbiosis(nn.Module):
                 mapping = component["mapping"]
                 if modal_name == 't2':
                     loss += self.l1_loss(data[modal_name],
-                                         pd * (-torch.exp(-mapping)))
+                                         pd * torch.exp(-mapping))
                 elif modal_name in ['t1', 't1ce']:
                     loss += self.l1_loss(data[modal_name],
                                          pd * (1 - torch.exp(-mapping)))
@@ -41,6 +41,7 @@ class Symbiosis(nn.Module):
                                  enhanced)
 
         pred = decomposed["t1"]["pd"] * (1 - torch.exp(-enhanced))
+        loss += self.l1_loss(data["t1ce"], pred)
         acc_result = general_image_metrics(
             pred, data["t1ce"], config, acc_result)
 

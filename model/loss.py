@@ -51,7 +51,8 @@ class FocalLoss(nn.Module):
 
     def forward(self, input, target):
         if input.dim() > 2:
-            input = input.view(input.size(0), input.size(1), -1)  # N,C,H,W => N,C,H*W
+            # N,C,H,W => N,C,H*W
+            input = input.view(input.size(0), input.size(1), -1)
             input = input.transpose(1, 2)  # N,C,H*W => N,H*W,C
             input = input.contiguous().view(-1, input.size(2))  # N,H*W,C => N*H*W,C
         target = target.view(-1, 1)
@@ -72,3 +73,22 @@ class FocalLoss(nn.Module):
             return loss.mean()
         else:
             return loss.sum()
+
+
+class SobelLoss(nn.Module):
+    def __init__(self):
+        super(SobelLoss, self).__init__()
+        self.l1_criterion = nn.L1Loss()
+
+    def sobel_x(self, x):
+        sobel_kernel = torch.tensor(
+            [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=torch.float32, device=x.device).view(1, 1, 3, 3)
+        return F.conv2d(x, sobel_kernel, padding=1)
+
+    def sobel_y(self, x):
+        sobel_kernel = torch.tensor(
+            [[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=torch.float32, device=x.device).view(1, 1, 3, 3)
+        return F.conv2d(x, sobel_kernel, padding=1)
+
+    def forward(self, pred, target):
+        return self.l1_criterion(self.sobel_x(pred), self.sobel_x(target)) + self.l1_criterion(self.sobel_y(pred), self.sobel_y(target))

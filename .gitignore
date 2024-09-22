@@ -5,6 +5,7 @@
 *swo
 .idea
 .vscode
+*.png
 __pycache__
 *un~
 
