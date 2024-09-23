@@ -46,19 +46,16 @@ def init_all(config, gpu_list, checkpoint, mode, *args, **params):
 
     try:
         parameters = torch.load(checkpoint)
-
-        map(lambda model_name, model: model.load_state_dict(
-            parameters[model_name]), models.items())
+        for model_name, model in models.items():
+            model.load_state_dict(parameters[model_name])
+        # map(lambda model_name, model: model.load_state_dict(
+        #     parameters[model_name]), models.items())
 
         if mode == "train":
             trained_epoch = parameters["trained_epoch"]
-            if config.get("train", "optimizer") == parameters["optimizer_name"]:
-                for model_name, optimizer in optimizers.items():
-                    optimizer.load_state_dict(
-                        parameters[optimizer.__class__.__name__ + model_name])
-            else:
-                logger.warning(
-                    "Optimizer changed, do not load parameters of optimizer.")
+            for model_name, optimizer in optimizers.items():
+                optimizer.load_state_dict(
+                    parameters[optimizer.__class__.__name__ + model_name])
             if "global_step" in parameters:
                 global_step = parameters["global_step"]
     except Exception as e:

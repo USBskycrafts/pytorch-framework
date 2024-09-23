@@ -19,13 +19,11 @@ class NIFTI1Loader(Dataset):
             test_num, "dataset size is not correct: " + str(len(data_list))
         if mode == "train":
             data_list = data_list[:training_num]
-        elif mode == "eval":
-            data_list = data_list[training_num:training_num+eval_num]
         elif mode == "valid":
+            data_list = data_list[training_num:training_num+eval_num]
+        elif mode == "test":
             data_list = data_list[training_num +
                                   eval_num:training_num+eval_num+test_num]
-        elif mode == "test":
-            data_list = data_list[training_num+eval_num+test_num:]
         else:
             logging.error("mode must be train, valid or test")
             raise ValueError("mode must be train, valid or test")

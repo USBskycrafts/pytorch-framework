@@ -3,6 +3,7 @@
 *.pkl
 *swp
 *swo
+*.png
 .idea
 .vscode
 __pycache__
