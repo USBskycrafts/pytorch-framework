@@ -4,6 +4,7 @@ from .enhancer import Enhancer
 from .decomposer import Decomposer
 from itertools import combinations
 from tools.accuracy_tool import general_image_metrics
+from model.loss import SobelLoss
 
 
 class Symbiosis(nn.Module):
@@ -12,6 +13,7 @@ class Symbiosis(nn.Module):
         self.enhancer = Enhancer()
         self.decomposer = Decomposer()
         self.l1_loss = nn.L1Loss()
+        self.sobel_loss = SobelLoss()
 
     def multi_gpu_list(self, device, config, *args, **kwargs):
         pass
@@ -26,10 +28,14 @@ class Symbiosis(nn.Module):
                 mapping = component["mapping"]
                 if modal_name == 't2':
                     loss += self.l1_loss(data[modal_name],
-                                         pd * torch.exp(-mapping))
+                                         pd * torch.exp(-mapping)) \
+                        + self.sobel_loss(data[modal_name],
+                                          pd * torch.exp(-mapping)) * 7
                 elif modal_name in ['t1', 't1ce']:
                     loss += self.l1_loss(data[modal_name],
-                                         pd * (1 - torch.exp(-mapping)))
+                                         pd * (1 - torch.exp(-mapping))) \
+                        + self.sobel_loss(data[modal_name],
+                                          pd * (1 - torch.exp(-mapping))) * 7
                 else:
                     raise ValueError(
                         "Unknown modal name: {}".format(modal_name))
@@ -38,10 +44,13 @@ class Symbiosis(nn.Module):
                 pd2 = components[1]["pd"]
                 loss += self.l1_loss(pd1, pd2)
             loss += self.l1_loss(decomposed["t1ce"]["mapping"],
-                                 enhanced)
+                                 enhanced) \
+                + self.sobel_loss(decomposed["t1ce"]["mapping"],
+                                  enhanced) * 7
 
         pred = decomposed["t1"]["pd"] * (1 - torch.exp(-enhanced))
-        loss += self.l1_loss(data["t1ce"], pred)
+        loss += self.l1_loss(data["t1ce"], pred) \
+            + self.sobel_loss(data["t1ce"], pred) * 7
         acc_result = general_image_metrics(
             pred, data["t1ce"], config, acc_result)
 
