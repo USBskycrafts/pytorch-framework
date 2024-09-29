@@ -15,10 +15,12 @@ logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', '-c', help="specific config file", required=True)
+    parser.add_argument(
+        '--config', '-c', help="specific config file", required=True)
     parser.add_argument('--gpu', '-g', help="gpu id list")
     parser.add_argument('--checkpoint', help="checkpoint file path")
-    parser.add_argument('--do_test', help="do test while training or not", action="store_true")
+    parser.add_argument(
+        '--do_test', help="do test while training or not", action="store_true")
     parser.add_argument('--local_rank', help='local rank', default=0)
     args = parser.parse_args()
 
@@ -39,7 +41,7 @@ if __name__ == "__main__":
         os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
 
         device_list = args.gpu.split(",")
-        for a in range(0, len(device_list)):
+        for a in device_list:
             gpu_list.append(int(a))
 
     os.system("clear")

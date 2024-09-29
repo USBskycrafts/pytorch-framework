@@ -59,12 +59,12 @@ def valid(playground, dataset, epoch, config, gpu_list, output_function, mode="v
     more = ""
     if total_len < 10000:
         more = "\t"
-
+    playground.eval_step = 0
     for step, data in enumerate(dataset):
         for key in data.keys():
             if isinstance(data[key], torch.Tensor):
                 if len(gpu_list) > 0:
-                    data[key] = Variable(data[key].cuda())
+                    data[key] = Variable(data[key].cuda(gpu_list[0]))
                 else:
                     data[key] = Variable(data[key])
 

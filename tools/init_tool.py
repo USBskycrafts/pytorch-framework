@@ -29,13 +29,18 @@ def init_all(config, gpu_list, checkpoint, mode, *args, **params):
     model_name = config.get("model", "model_name").replace(" ", "").split(",")
     models = {name: get_model(name)(
         config, gpu_list, *args, **params) for name in model_name}
-    optimizers = {model_name: init_optimizer(model, config, *args, **params)
-                  for model_name, model in models.items()}
+    optimizer_names = config.get(
+        "model", "optimizer_name").replace(" ", "").split(",")
+    optimizers = {model_name: init_optimizer(model, config, optimizer_name,
+                                             *args, **params)
+                  for (model_name, model), optimizer_name in zip(models.items(), optimizer_names)}
     trained_epoch = 0
     global_step = 0
 
     if len(gpu_list) > 0:
-        models = {name: model.cuda() for name, model in models.items()}
+        print(f"use gpu {gpu_list[0]}")
+        models = {name: model.cuda(gpu_list[0])
+                  for name, model in models.items()}
 
         try:
             map(lambda model: model.init_multi_gpu(

@@ -78,11 +78,12 @@ def train(parameters, config, gpu_list, do_test=False):
 
         output_info = ""
         step = -1
+        playground.train_step = 0
         for step, data in enumerate(dataset):
             for key in data.keys():
                 if isinstance(data[key], torch.Tensor):
                     if len(gpu_list) > 0:
-                        data[key] = Variable(data[key].cuda())
+                        data[key] = Variable(data[key].cuda(gpu_list[0]))
                     else:
                         data[key] = Variable(data[key])
             results = playground._train(
