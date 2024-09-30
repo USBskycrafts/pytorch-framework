@@ -1,7 +1,7 @@
 from .symbiosis.net import Symbiosis
 
 model_list = {
-    "symbiosis-v1": Symbiosis
+    "symbiosis-v3": Symbiosis
 }
 
 

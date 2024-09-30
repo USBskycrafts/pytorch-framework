@@ -28,14 +28,10 @@ class Symbiosis(nn.Module):
                 mapping = component["mapping"]
                 if modal_name == 't2':
                     loss += self.l1_loss(data[modal_name],
-                                         pd * torch.exp(-mapping)) \
-                        + self.sobel_loss(data[modal_name],
-                                          pd * torch.exp(-mapping)) * 7
+                                         pd * torch.exp(-mapping))
                 elif modal_name in ['t1', 't1ce']:
                     loss += self.l1_loss(data[modal_name],
-                                         pd * (1 - torch.exp(-mapping))) \
-                        + self.sobel_loss(data[modal_name],
-                                          pd * (1 - torch.exp(-mapping))) * 7
+                                         pd * (1 - torch.exp(-mapping)))
                 else:
                     raise ValueError(
                         "Unknown modal name: {}".format(modal_name))
@@ -44,13 +40,10 @@ class Symbiosis(nn.Module):
                 pd2 = components[1]["pd"]
                 loss += self.l1_loss(pd1, pd2)
             loss += self.l1_loss(decomposed["t1ce"]["mapping"],
-                                 enhanced) \
-                + self.sobel_loss(decomposed["t1ce"]["mapping"],
-                                  enhanced) * 7
+                                 enhanced)
 
         pred = decomposed["t1"]["pd"] * (1 - torch.exp(-enhanced))
-        loss += self.l1_loss(data["t1ce"], pred) \
-            + self.sobel_loss(data["t1ce"], pred) * 7
+        loss += self.l1_loss(data["t1ce"], pred)
         acc_result = general_image_metrics(
             pred, data["t1ce"], config, acc_result)
 

@@ -11,7 +11,7 @@ class Decomposer(nn.Module):
     def forward(self, data, mode):
         result = {}
         for modal_name, modal in data.items():
-            if mode == 'test' and modal_name != 't1':
+            if mode == 'test' and modal_name == 't1ce':
                 continue
             pd, mapping = torch.split(self.generator(modal), 1, dim=1)
             result[modal_name] = {
