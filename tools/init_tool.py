@@ -43,8 +43,11 @@ def init_all(config, gpu_list, checkpoint, mode, *args, **params):
                   for name, model in models.items()}
 
         try:
-            map(lambda model: model.init_multi_gpu(
-                gpu_list, config, *args, **params), models)
+            # map(lambda model: model.init_multi_gpu(
+            #     gpu_list, config, *args, **params), models)
+            [model.init_multi_gpu(
+                gpu_list, config, *args, **params) for model in models.values()]
+
         except Exception as e:
             logger.warning(
                 "No init_multi_gpu implemented in the model, use single gpu instead.")

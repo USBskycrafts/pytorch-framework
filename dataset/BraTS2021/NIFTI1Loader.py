@@ -4,7 +4,6 @@ from torch.utils.data import Dataset
 import os
 import logging
 import nibabel as nib
-from typing import List
 
 
 class NIFTI1Loader(Dataset):
@@ -27,6 +26,15 @@ class NIFTI1Loader(Dataset):
         else:
             logging.error("mode must be train, valid or test")
             raise ValueError("mode must be train, valid or test")
+        self.dataset = self.load_data(data_list, dataset_path, mode)
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, index):
+        return self.dataset[index]
+
+    def load_data(self, data_list, dataset_path, mode):
         dataset = []
         for item in data_list:
             item = os.path.join(dataset_path, item)
@@ -52,13 +60,7 @@ class NIFTI1Loader(Dataset):
                 # now modals is a dictionary of lists
                 dataset.extend([dict(zip(modals.keys(), values))
                                for values in zip(*modals.values())])
-        self.dataset = dataset
-
-    def __len__(self):
-        return len(self.dataset)
-
-    def __getitem__(self, index):
-        return self.dataset[index]
+        return dataset
 
     def transform_tensor(self, data, mode):
         tensor = torch.Tensor(data)
@@ -67,6 +69,6 @@ class NIFTI1Loader(Dataset):
         h, w, c = tensor.shape
         tensor = tensor[:, :, c // 4: c // 4 * 3]
         if mode != "test":
-            tensor = tensor[40:200, 30:220, :]
+            tensor = tensor[8:232, 8:232, :]
         tensor = tensor.permute(2, 0, 1)
         return torch.split(tensor, 1, dim=0)

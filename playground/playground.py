@@ -27,7 +27,8 @@ class Playground:
         raise NotImplementedError("Please implement this method")
 
     def _train(self, *args, **kwargs):
-        map(lambda model: model.train(), self.models.values())
+        # map(lambda model: model.train(), self.models.values())
+        [model.train() for model in self.models.values()]
         trainer = self.train(*args, **kwargs)
         self.train_step += 1
         loss = []
@@ -47,7 +48,7 @@ class Playground:
         raise NotImplementedError("Please implement this method")
 
     def _test(self, *args, **kwargs):
-        map(lambda model: model.eval(), self.models.values())
+        [model.eval() for model in self.models.values()]
         result = self.test(*args, **kwargs)
         self.test_step += 1
         return result
@@ -56,7 +57,8 @@ class Playground:
         raise NotImplementedError("Please implement this method")
 
     def _eval(self, *args, **kargs):
-        map(lambda model: model.eval(), self.models.values())
+        # map(lambda model: model.eval(), self.models.values())
+        [model.eval() for model in self.models.values()]
         result = self.eval(*args, **kargs)
         self.eval_step += 1
         loss, acc_result = result["loss"], result["acc_result"]
