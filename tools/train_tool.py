@@ -83,7 +83,7 @@ def train(parameters, config, gpu_list, do_test=False):
             for key in data.keys():
                 if isinstance(data[key], torch.Tensor):
                     if len(gpu_list) > 0:
-                        data[key] = Variable(data[key].cuda(gpu_list[0]))
+                        data[key] = Variable(data[key].cuda())
                     else:
                         data[key] = Variable(data[key])
             results = playground._train(

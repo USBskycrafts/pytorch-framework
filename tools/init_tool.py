@@ -38,8 +38,7 @@ def init_all(config, gpu_list, checkpoint, mode, *args, **params):
     global_step = 0
 
     if len(gpu_list) > 0:
-        print(f"use gpu {gpu_list[0]}")
-        models = {name: model.cuda(gpu_list[0])
+        models = {name: model.cuda()
                   for name, model in models.items()}
 
         try:

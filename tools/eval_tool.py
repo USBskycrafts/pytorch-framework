@@ -64,7 +64,7 @@ def valid(playground, dataset, epoch, config, gpu_list, output_function, mode="v
         for key in data.keys():
             if isinstance(data[key], torch.Tensor):
                 if len(gpu_list) > 0:
-                    data[key] = Variable(data[key].cuda(gpu_list[0]))
+                    data[key] = Variable(data[key].cuda())
                 else:
                     data[key] = Variable(data[key])
 
