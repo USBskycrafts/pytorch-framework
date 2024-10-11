@@ -163,14 +163,14 @@ def single_label_top2_accuracy(outputs, label, config, result=None):
     return result
 
 
-def ssim_accuracy(outputs: torch.Tensor, ground_truth: torch.Tensor, config) -> str:
+def ssim_accuracy(outputs: torch.Tensor, ground_truth: torch.Tensor, config):
     data_range = config.getint("data", "normalization")
     metric = SSIM(data_range=data_range)
     metric.update([outputs, ground_truth])
     return metric.compute() * 100
 
 
-def psnr_accuracy(outputs: torch.Tensor, ground_truth: torch.Tensor, config) -> str:
+def psnr_accuracy(outputs: torch.Tensor, ground_truth: torch.Tensor, config):
     data_range = config.getint("data", "normalization")
     metric = PSNR(data_range=data_range)
     metric.update([outputs, ground_truth])
