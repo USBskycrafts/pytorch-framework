@@ -24,19 +24,27 @@ class Printer:
             future.result()
 
     def print(self, data, step):
-        length = len(data)
         if not os.path.exists(f"{self.path}/{self.model_name}"):
             os.makedirs(f"{self.path}/{self.model_name}")
         with self.lock:
-            for i, (modal, image) in enumerate(data.items()):
+            fig, axes = plt.subplots(1, 4)
+            for i, (modal, image) in enumerate({
+                't1': data['t1'],
+                't2': data['t2'],
+                't1ce': data['t1ce'],
+                'pred': data['pred']
+            }.items()):
                 if len(image.shape) == 4:
                     bs, *_ = image.shape
                     image = image[bs // 2]
                 image = image.permute(1, 2, 0).detach().cpu().numpy()
-                axes = plt.subplot(1, length, i + 1)
-                axes.set_title(modal)
-                axes.imshow(image, cmap='gray', vmin=0, vmax=1)
-            plt.tight_layout()
+                ax = axes[i]
+                ax.set_title(
+                    modal + f"#{data['number'][bs // 2]}, {data['layer'][bs // 2]}")
+                ax.axis('off')
+                ax.imshow(image, cmap='gray', vmin=0, vmax=1)
+            fig.tight_layout()
             plt.savefig(f"{self.path}/{self.model_name}/{step}.png",
-                        bbox_inches='tight', dpi=1600)
+                        bbox_inches='tight', dpi=500)
+            plt.close(fig)
             plt.clf()
