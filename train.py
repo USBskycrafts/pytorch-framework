@@ -15,10 +15,12 @@ logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', '-c', help="specific config file", required=True)
+    parser.add_argument(
+        '--config', '-c', help="specific config file", required=True)
     parser.add_argument('--gpu', '-g', help="gpu id list")
     parser.add_argument('--checkpoint', help="checkpoint file path")
-    parser.add_argument('--do_test', help="do test while training or not", action="store_true")
+    parser.add_argument(
+        '--do_test', help="do test while training or not", action="store_true")
     parser.add_argument('--local_rank', help='local rank', default=0)
     args = parser.parse_args()
 
