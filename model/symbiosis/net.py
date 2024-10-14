@@ -13,12 +13,19 @@ class Symbiosis(nn.Module):
         self.enhancer = Enhancer()
         self.decomposer = Decomposer()
         self.l1_loss = nn.L1Loss()
+        self.mse_loss = nn.MSELoss()
         self.sobel_loss = SobelLoss()
 
-    def multi_gpu_list(self, device, config, *args, **kwargs):
+    def init_multi_gpu(self, device, config, *args, **kwargs):
         pass
 
     def forward(self, data, config, gpu_list, acc_result, mode):
+        mask = data["mask"]
+        data = {
+            "t1": data["t1"],
+            "t1ce": data["t1ce"],
+            "t2": data["t2"],
+        }
         decomposed = self.decomposer(data, mode)
         enhanced = self.enhancer(decomposed)
         loss = 0
@@ -40,7 +47,10 @@ class Symbiosis(nn.Module):
                 pd2 = components[1]["pd"]
                 loss += self.l1_loss(pd1, pd2)
             loss += self.l1_loss(decomposed["t1ce"]["mapping"],
-                                 enhanced)
+                                 enhanced) \
+                + self.mse_loss(decomposed["t1ce"]["mapping"] * mask,
+                                enhanced * mask) * 5 \
+                + self.sobel_loss(decomposed["t1ce"]["mapping"], enhanced) * 3
 
         pred = decomposed["t1"]["pd"] * (1 - torch.exp(-enhanced))
         loss += self.l1_loss(data["t1ce"], pred)

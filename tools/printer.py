@@ -44,7 +44,7 @@ class Printer:
                 ax.axis('off')
                 ax.imshow(image, cmap='gray', vmin=0, vmax=1)
             fig.tight_layout()
-            plt.savefig(f"{self.path}/{self.model_name}/{step}.png",
+            plt.savefig(f"{self.path}/{self.model_name}/{data['number']}-{data['layer']}.png",
                         bbox_inches='tight', dpi=500)
             plt.close(fig)
             plt.clf()

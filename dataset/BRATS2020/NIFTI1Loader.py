@@ -17,6 +17,7 @@ class NIFTI1Loader(Dataset):
         self.t1_dir = config.get("data", "%s_t1_dir" % mode)
         self.t2_dir = config.get("data", "%s_t2_dir" % mode)
         self.t1ce_dir = config.get("data", "%s_t1ce_dir" % mode)
+        self.label_dir = config.get("data", "%s_label_dir" % mode)
         self.logger = logging.getLogger(__name__)
         self.input_dim = config.getint("model", "input_dim")
         self.output_dim = config.getint("model", "output_dim")
@@ -25,38 +26,47 @@ class NIFTI1Loader(Dataset):
 
         pbar = tqdm(zip(sorted(os.listdir(self.t1_dir)),
                         sorted(os.listdir(self.t2_dir)),
-                        sorted(os.listdir(self.t1ce_dir))))
+                        sorted(os.listdir(self.t1ce_dir)),
+                        sorted(os.listdir(self.label_dir))))
         cnt = 0
-        for (T1, T2, T1CE) in pbar:
+        for (T1, T2, T1CE, label) in pbar:
             pbar.set_description("Loading %s data" % mode)
-            if T1.endswith(".nii") and T2.endswith(".nii") and T1CE.endswith(".nii"):
+            if T1.endswith(".nii") and T2.endswith(".nii") and T1CE.endswith(".nii") and label.endswith(".nii"):
                 number = int(T1.split("_")[2])
                 if not self.filter(number - 1):
                     continue
                 cnt += 1
 
-                def load_from_path(dir, path):
+                def load_from_path(dir, path) -> torch.Tensor:
                     path = os.path.join(dir, path)
                     image = nib.nifti1.load(path)
                     # transform to standard pytorch tensor
                     tensor = torch.Tensor(image.get_fdata())
                     tensor = tensor.permute(2, 0, 1)
+                    return tensor
+
+                def normalize(tensor):
                     # normalize
                     tensor = (tensor - tensor.min()) / \
                         (tensor.max() - tensor.min())
                     return tensor
-                T1, T2, T1CE = map(load_from_path, [
-                    self.t1_dir, self.t2_dir, self.t1ce_dir], [T1, T2, T1CE])
+                T1, T2, T1CE, label = map(load_from_path, [
+                    self.t1_dir, self.t2_dir, self.t1ce_dir, self.label_dir], [T1, T2, T1CE, label])
+                T1, T2, T1CE = map(normalize, [T1, T2, T1CE])
                 n_channels, *_ = T1.shape
-                T1, T2, T1CE = map(lambda x: self.data_process(
-                    x, config, mode, *args, **kwargs), [T1, T2, T1CE])
+                mask = (label == 1) * torch.ones_like(label) + \
+                    (label == 4) * torch.ones_like(label)
+
+                T1, T2, T1CE, mask = map(lambda x: self.data_process(
+                    x, config, mode, *args, **kwargs), [T1, T2, T1CE, mask])
                 self.data_list.extend({
                     "t1": t1,
                     "t2": t2,
                     "t1ce": t1ce,
+                    "mask": mask,
                     "number": torch.tensor(number),
                     "layer": torch.tensor(i + n_channels // 2 - n_channels // 4)
-                } for i, (t1, t2, t1ce) in enumerate(zip(T1, T2, T1CE)))
+                } for i, (t1, t2, t1ce, mask) in enumerate(zip(T1, T2, T1CE, mask)))
         self.logger.info("Loaded %d %s data" % (cnt, mode))
 
     def __getitem__(self, index):
