@@ -54,8 +54,7 @@ class NIFTI1Loader(Dataset):
                     self.t1_dir, self.t2_dir, self.t1ce_dir, self.label_dir], [T1, T2, T1CE, label])
                 T1, T2, T1CE = map(normalize, [T1, T2, T1CE])
                 n_channels, *_ = T1.shape
-                mask = (label == 1) * torch.ones_like(label) + \
-                    (label == 4) * torch.ones_like(label)
+                mask = (label == 4) * torch.ones_like(label)
 
                 T1, T2, T1CE, mask = map(lambda x: self.data_process(
                     x, config, mode, *args, **kwargs), [T1, T2, T1CE, mask])

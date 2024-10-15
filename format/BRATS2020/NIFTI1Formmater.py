@@ -2,6 +2,7 @@ import logging
 from typing import Dict, List
 import torch
 from format.Basic import BasicFormatter
+from format.augment.data_augmentation import get_data_augmentation
 
 
 class NIFTI1Formatter(BasicFormatter):
@@ -18,7 +19,7 @@ class NIFTI1Formatter(BasicFormatter):
         mask_list = [mask for mask in map(lambda x: x['mask'], data)]
         number_list = [number for number in map(lambda x: x['number'], data)]
         layer_list = [number for number in map(lambda x: x['layer'], data)]
-        return {
+        batch = {
             't1': torch.stack(t1_list, dim=0),
             't2': torch.stack(t2_list, dim=0),
             't1ce': torch.stack(t1ce_list, dim=0),
@@ -26,3 +27,17 @@ class NIFTI1Formatter(BasicFormatter):
             'number': torch.stack(number_list, dim=0),
             'layer': torch.stack(layer_list, dim=0),
         }
+        if mode != 'test':
+            aug = get_data_augmentation(
+                torch.cat([batch['t1'], batch['t2'],
+                          batch['t1ce'], batch['mask']], dim=1).numpy(),
+            )
+            aug = next(aug)
+            aug['data'] = torch.from_numpy(aug['data'])
+            t1, t2, t1ce, mask = torch.split(aug['data'], 1, dim=1)
+            assert batch['t1'].shape == t1.shape
+            batch['t1'] = t1
+            batch['t2'] = t2
+            batch['t1ce'] = t1ce
+            batch['mask'] = mask
+        return batch
