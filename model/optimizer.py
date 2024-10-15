@@ -9,7 +9,8 @@ def init_optimizer(model, config, *args, **params):
     learning_rate = config.getfloat("train", "learning_rate")
     if optimizer_type == "adam":
         optimizer = Adam(model.parameters(), lr=learning_rate,
-                         weight_decay=config.getfloat("train", "weight_decay"))
+                         weight_decay=config.getfloat("train", "weight_decay"),
+                         amsgrad=True)
     elif optimizer_type == "sgd":
         optimizer = SGD(model.parameters(), lr=learning_rate,
                         weight_decay=config.getfloat("train", "weight_decay"),
@@ -21,5 +22,4 @@ def init_optimizer(model, config, *args, **params):
                           weight_decay=config.getfloat("train", "weight_decay"))
     else:
         raise NotImplementedError
-
     return optimizer

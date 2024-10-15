@@ -62,7 +62,7 @@ def train(parameters, config, gpu_list, do_test=False):
                 exist_ok=True)
 
     exp_lr_scheduler = lr_scheduler.PolynomialLR(
-        optimizer, total_iters=epoch, power=0.09)
+        optimizer, total_iters=epoch, power=0.9)
 
     logger.info("Training start....")
 
