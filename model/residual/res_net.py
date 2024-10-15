@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 from .res_block import ResidualBlock
-from mmcv.ops import DeformConv2dPack
 
 
 class GeneratorResNet(nn.Module):
@@ -16,7 +15,7 @@ class GeneratorResNet(nn.Module):
         model = [  # model = [Pad + Conv + Norm + ReLU]
             # ReflectionPad2d(3):利用输入边界的反射来填充输入张量
             nn.ReflectionPad2d(3),
-            DeformConv2dPack(channels, out_features, 7),  # Conv2d(3, 64, 7)
+            nn.Conv2d(channels, out_features, 7),  # Conv2d(3, 64, 7)
             # InstanceNorm2d(64):在图像像素上对HW做归一化，用在风格化迁移
             nn.InstanceNorm2d(out_features),
             nn.LeakyReLU(inplace=True),  # 非线性激活
@@ -27,8 +26,8 @@ class GeneratorResNet(nn.Module):
         for _ in range(2):
             out_features *= 2  # out_features = 128 -> 256
             model += [  # (Conv + Norm + ReLU) * 2
-                DeformConv2dPack(in_features, out_features,
-                                 3, stride=2, padding=1),
+                nn.Conv2d(in_features, out_features,
+                          3, stride=2, padding=1),
                 nn.InstanceNorm2d(out_features),
                 nn.LeakyReLU(inplace=True),
             ]
@@ -44,8 +43,8 @@ class GeneratorResNet(nn.Module):
             out_features //= 2  # out_features = 128 -> 64
             model += [  # model += [Upsample + conv + norm + relu]
                 nn.Upsample(scale_factor=2),
-                DeformConv2dPack(in_features, out_features,
-                                 3, stride=1, padding=1),
+                nn.Conv2d(in_features, out_features,
+                          3, stride=1, padding=1),
                 nn.InstanceNorm2d(out_features),
                 nn.LeakyReLU(inplace=True),
             ]
@@ -54,7 +53,7 @@ class GeneratorResNet(nn.Module):
         # 网络输出层                                                            ## model += [pad + conv + tanh]
         # 将(3)的数据每一个都映射到[-1, 1]之间
         model += [nn.ReflectionPad2d(3),
-                  DeformConv2dPack(out_features, output_dim, 7),
+                  nn.Conv2d(out_features, output_dim, 7),
                   nn.Softplus()]
 
         self.model = nn.Sequential(*model)

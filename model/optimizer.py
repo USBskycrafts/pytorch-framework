@@ -12,7 +12,10 @@ def init_optimizer(model, config, *args, **params):
                          weight_decay=config.getfloat("train", "weight_decay"))
     elif optimizer_type == "sgd":
         optimizer = SGD(model.parameters(), lr=learning_rate,
-                        weight_decay=config.getfloat("train", "weight_decay"))
+                        weight_decay=config.getfloat("train", "weight_decay"),
+                        momentum=config.getfloat("train", "momentum"),
+                        nesterov=config.getboolean("train", "nesterov"))
+
     elif optimizer_type == 'adamw':
         optimizer = AdamW(model.parameters(), lr=learning_rate,
                           weight_decay=config.getfloat("train", "weight_decay"))
