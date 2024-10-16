@@ -60,6 +60,6 @@ class Symbiosis(nn.Module):
         return {
             "loss": loss,
             "acc_result": acc_result,
-            "output": [loss],
+            "output": [acc_result["PSNR"]],
             "pred": pred
         }

@@ -27,7 +27,7 @@ class NIFTI1Formatter(BasicFormatter):
             'number': torch.stack(number_list, dim=0),
             'layer': torch.stack(layer_list, dim=0),
         }
-        if mode != 'test':
+        if mode != 'test' or True:
             aug = get_data_augmentation(
                 torch.cat([batch['t1'], batch['t2'],
                           batch['t1ce'], batch['mask']], dim=1).numpy(),

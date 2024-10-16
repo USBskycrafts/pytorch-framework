@@ -19,7 +19,9 @@ def init_optimizer(model, config, *args, **params):
 
     elif optimizer_type == 'adamw':
         optimizer = AdamW(model.parameters(), lr=learning_rate,
-                          weight_decay=config.getfloat("train", "weight_decay"))
+                          weight_decay=config.getfloat(
+                              "train", "weight_decay"),
+                          amsgrad=True)
     else:
         raise NotImplementedError
     return optimizer

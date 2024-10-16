@@ -1,23 +1,33 @@
-import torch
 import numpy as np
-from typing import Dict
 from batchgenerators.dataloading.data_loader import SlimDataLoaderBase
 from batchgenerators.transforms.spatial_transforms import SpatialTransform
 from batchgenerators.dataloading.single_threaded_augmenter import SingleThreadedAugmenter
 from batchgenerators.transforms.abstract_transforms import Compose
 from batchgenerators.transforms.abstract_transforms import RndTransform
+import torch
+
+from .mask_to_bbox import mask_to_bbox
 
 
 def get_data_augmentation(tensor):
     bs, c, h, w = tensor.shape
+    mask = tensor[:, 3]
+    bboxes = map(mask_to_bbox, np.split(mask, bs, axis=0))
+    bboxes = map(lambda bbox: sorted(
+        bbox, key=lambda x: x[2] * x[1], reverse=True), bboxes)
+    center = np.array([h // 2, w // 2])
+    if not bboxes:
+        print(f"Found {len(list(bboxes))}, {list(bboxes)} bboxes")
+        center_points = map(lambda bbox: np.array(bbox[0]), bboxes)
+        center = np.mean(np.array(center_points), axis=0)
     batch = DataLoader(tensor, bs)
-    spatial_transform = SpatialTransform((h, w), np.array((h, w)) // 2,
+    spatial_transform = SpatialTransform((h, w), center,
                                          do_elastic_deform=True, alpha=(0., 1500.), sigma=(30., 50.),
                                          do_rotation=True, angle_z=(0, 2 * np.pi),
-                                         do_scale=True, scale=(0.5, 2),
+                                         do_scale=True, scale=(0.5, 1),
                                          border_mode_data='constant', border_cval_data=0, order_data=1,
                                          random_crop=True)
-    spatial_transform = RndTransform(spatial_transform, prob=0.5)
+    spatial_transform = RndTransform(spatial_transform, prob=0.8)
     multithreaded_generator = SingleThreadedAugmenter(
         batch, Compose([spatial_transform]))
     return multithreaded_generator
