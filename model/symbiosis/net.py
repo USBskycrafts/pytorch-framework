@@ -29,10 +29,9 @@ class Symbiosis(nn.Module):
             "t2": data["t2"],
         }
         decomposed = self.decomposer(data, mode)
-        t1_weight, t2_weight = torch.split(
+        t1_weight, t1_bias = torch.split(
             self.enhancer(decomposed), 1, dim=1)
-        enhanced = decomposed['t2']['mapping'] * t1_weight \
-            + decomposed['t1']['mapping'] * t2_weight
+        enhanced = decomposed['t1']['mapping'] * t1_weight + t1_bias
         loss = 0
         if mode != "test":
             for modal_name, component in decomposed.items():
@@ -55,11 +54,11 @@ class Symbiosis(nn.Module):
                 pd2 = components[1]["pd_vector"]
                 loss += self.l1_loss(pd1, pd2)
             loss += self.l1_loss(decomposed["t1ce"]["mapping"],
-                                 enhanced) \
-                + self.sobel_loss(decomposed["t1ce"]["mapping"], enhanced)
+                                 enhanced)
 
         pred = decomposed["t1"]["pd"] * (1 - torch.exp(-enhanced))
-        loss += self.l1_loss(data["t1ce"], pred)
+        loss += self.l1_loss(data["t1ce"], pred) \
+            + self.sobel_loss(pred, data["t1ce"])
         acc_result = general_image_metrics(
             pred, data["t1ce"], config, acc_result)
 
