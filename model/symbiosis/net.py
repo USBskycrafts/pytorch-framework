@@ -29,10 +29,9 @@ class Symbiosis(nn.Module):
             "t2": data["t2"],
         }
         decomposed = self.decomposer(data, mode)
-        t1_weight, t2_weight = torch.split(
+        t1_weight, t1_bias = torch.split(
             self.enhancer(decomposed), 1, dim=1)
-        enhanced = decomposed['t2']['mapping'] * t1_weight \
-            + decomposed['t1']['mapping'] * t2_weight
+        enhanced = decomposed['t1']['mapping'] * t1_weight + t1_bias
         loss = 0
         if mode != "test":
             for modal_name, component in decomposed.items():
