@@ -5,7 +5,7 @@ import os
 import logging
 import nibabel as nib
 from typing import List
-from tqdm import tqdm
+from tqdm.contrib import tzip
 from .filter import BraTS2020Filter
 
 
@@ -24,13 +24,12 @@ class NIFTI1Loader(Dataset):
         self.data_list = []
         self.filter = BraTS2020Filter(config.get("data", "filter"))
 
-        pbar = tqdm(zip(sorted(os.listdir(self.t1_dir)),
-                        sorted(os.listdir(self.t2_dir)),
-                        sorted(os.listdir(self.t1ce_dir)),
-                        sorted(os.listdir(self.label_dir))))
+        pbar = tzip(sorted(os.listdir(self.t1_dir)),
+                    sorted(os.listdir(self.t2_dir)),
+                    sorted(os.listdir(self.t1ce_dir)),
+                    sorted(os.listdir(self.label_dir)))
         cnt = 0
-        for (T1, T2, T1CE, label) in pbar:
-            pbar.set_description("Loading %s data" % mode)
+        for T1, T2, T1CE, label in pbar:
             if T1.endswith(".nii") and T2.endswith(".nii") and T1CE.endswith(".nii") and label.endswith(".nii"):
                 number = int(T1.split("_")[2])
                 if not self.filter(number - 1):

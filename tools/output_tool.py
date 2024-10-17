@@ -27,5 +27,5 @@ def vision_output_function(data, config, *args, **params):
             result[metric +
                    " mean"] = "{:<7}".format(f"{np.mean(value):<2.2f}")[:7]
             result[metric +
-                   " std"] = "{:<7}".format(f"{np.std(value, ddof=1):<2.2f}")[:7]
+                   " std"] = "{:<7}".format(f"{np.std(value):<2.2f}")[:7]
     return json.dumps(result, sort_keys=True)
