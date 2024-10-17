@@ -22,10 +22,10 @@ def get_data_augmentation(tensor):
     spatial_transform = SpatialTransform((h, w), center,
                                          do_elastic_deform=True, alpha=(0., 1500.), sigma=(30., 50.),
                                          do_rotation=True, angle_z=(0, 2 * np.pi),
-                                         do_scale=True, scale=(0.3, 0.8),
+                                         do_scale=True, scale=(0.65, 1.6),
                                          border_mode_data='constant', border_cval_data=0, order_data=1,
                                          random_crop=True)
-    spatial_transform = RndTransform(spatial_transform, prob=0.8)
+    spatial_transform = RndTransform(spatial_transform, prob=0.3)
     multithreaded_generator = SingleThreadedAugmenter(
         batch, Compose([spatial_transform]))
     return multithreaded_generator
