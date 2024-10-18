@@ -48,7 +48,7 @@ class Down(nn.Module):
 class Up(nn.Module):
     """Upscaling then double conv"""
 
-    def __init__(self, in_channels, out_channels, bilinear=False):
+    def __init__(self, in_channels, out_channels, layer, bilinear=False):
         super().__init__()
 
         # if bilinear, use the normal convolutions to reduce the number of channels
@@ -58,8 +58,9 @@ class Up(nn.Module):
             self.conv = DoubleConv(in_channels, out_channels, in_channels // 2)
         else:
             self.up = nn.ConvTranspose2d(
-                in_channels, in_channels // 2, kernel_size=2, stride=2)
-            self.conv = DoubleConv(in_channels, out_channels)
+                in_channels, in_channels // 2 if 2 ** (layer + 4) < 512 else 512, kernel_size=2, stride=2)
+            self.conv = DoubleConv(
+                in_channels if 2 ** (layer + 4) < 512 else 1024, out_channels)
 
     def forward(self, x1, x2):
         x1 = self.up(x1)
@@ -70,6 +71,7 @@ class Up(nn.Module):
         x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2,
                         diffY // 2, diffY - diffY // 2])
         x = torch.cat([x2, x1], dim=1)
+        # print(x.shape, x1.shape, x2.shape)
         return self.conv(x)
 
 

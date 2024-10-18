@@ -9,11 +9,11 @@ class Decomposer(nn.Module):
     def __init__(self):
         super().__init__()
         # self.generator = GeneratorResNet(1, 2)
-        self.encoder = UNetEncoder(1, 1024)
-        self.pd_decoder = UNetDecoder(1024, 1)
-        self.mapping_decoder = UNetDecoder(1024, 1)
-        self.conv = DoubleConv(512, 1024)
-        self.projection_head = ProjectionHead(512, 1024)
+        self.encoder = UNetEncoder(1, 5)
+        self.pd_decoder = UNetDecoder(1, 5)
+        self.mapping_decoder = UNetDecoder(1, 5)
+        self.conv = DoubleConv(256, 512)
+        self.projection_head = ProjectionHead(256, 512)
 
     def forward(self, data, mode):
         result = {}

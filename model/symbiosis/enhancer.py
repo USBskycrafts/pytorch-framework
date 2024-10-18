@@ -7,8 +7,8 @@ from model.unet.unet_model import UNetDecoder, UNetEncoder
 class Enhancer(nn.Module):
     def __init__(self):
         super().__init__()
-        self.encoder = UNetEncoder(2, 1024)
-        self.decoder = UNetDecoder(1024, 2)
+        self.encoder = UNetEncoder(2, 5)
+        self.decoder = UNetDecoder(2, 5)
 
     def forward(self, data):
         x = torch.cat([data["t1"]["mapping"],
