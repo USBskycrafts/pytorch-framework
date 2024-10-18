@@ -5,8 +5,8 @@ from model.symbiosis.projection_head import ProjectionHead
 from .enhancer import Enhancer
 from .decomposer import Decomposer
 from itertools import combinations
-from tools.accuracy_tool import general_image_metrics
-from model.loss import SobelLoss
+from tools.accuracy_tool import general_accuracy, general_image_metrics
+from model.loss import DiceLoss, SobelLoss
 
 
 class Symbiosis(nn.Module):
@@ -18,21 +18,27 @@ class Symbiosis(nn.Module):
         self.l1_loss = nn.L1Loss()
         self.cos = nn.CosineEmbeddingLoss(margin=0.5)
         self.sobel_loss = SobelLoss()
+        self.dice_loss = DiceLoss(multiclass=False)
 
     def init_multi_gpu(self, device, config, *args, **kwargs):
         pass
 
     def forward(self, data, config, gpu_list, acc_result, mode):
+        mask = data["mask"]
         data = {
             "t1": data["t1"],
             "t1ce": data["t1ce"],
             "t2": data["t2"],
         }
         decomposed = self.decomposer(data, mode)
-        t1_weight, t1_bias = torch.split(
+        weight, mask_pred = torch.split(
             self.enhancer(decomposed), 1, dim=1)
-        enhanced = decomposed['t1']['mapping'] * t1_weight + t1_bias
-        loss = 0
+        mask_pred = torch.sigmoid(mask_pred)
+
+        enhanced = decomposed['t1']['mapping'] * weight
+        loss = self.dice_loss(mask.squeeze(dim=1), mask_pred.squeeze(dim=1))
+        acc_result = general_accuracy(
+            dice := loss.detach().item(), acc_result, "DICE")
         if mode != "test":
             for modal_name, component in decomposed.items():
                 pd = component["pd"]
@@ -47,8 +53,9 @@ class Symbiosis(nn.Module):
                     raise ValueError(
                         "Unknown modal name: {}".format(modal_name))
                 bs, *_ = component["pd_vector"].shape
+                dev = component['pd_vector'].device
                 loss += self.cos(component["pd_vector"],
-                                 component["mapping_vector"], -1 * torch.ones(bs))
+                                 component["mapping_vector"], -1 * torch.ones(bs, device=dev))
             for components in combinations(decomposed.values(), 2):
                 pd1 = components[0]["pd_vector"]
                 pd2 = components[1]["pd_vector"]

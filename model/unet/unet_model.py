@@ -8,8 +8,8 @@ class UNetEncoder(nn.Module):
     def __init__(self, in_channels=1, out_channels=1024):
         super(UNetEncoder, self).__init__()
         self.model = nn.ModuleList()
-        self.model += [DoubleConv(in_channels, 64)]
-        in_features = 64
+        in_features = 32
+        self.model += [DoubleConv(in_channels, in_features)]
         while in_features * 2 <= out_channels:
             self.model.append(Down(in_features, in_features * 2))
             in_features *= 2
@@ -29,7 +29,7 @@ class UNetDecoder(nn.Module):
         super(UNetDecoder, self).__init__()
         self.model = nn.ModuleList()
         in_features = in_channels
-        while in_features // 2 >= 64:
+        while in_features // 2 >= 32:
             self.model.append(Up(in_features, in_features // 2))
             in_features //= 2
         self.out_conv = OutConv(in_features, out_channels)

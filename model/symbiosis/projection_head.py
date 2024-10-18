@@ -12,4 +12,4 @@ class ProjectionHead(nn.Module):
         )
 
     def forward(self, x):
-        return self.model(x).squeeze()
+        return self.model(x).squeeze(dim=3).squeeze(dim=2)
