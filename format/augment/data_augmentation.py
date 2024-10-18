@@ -1,9 +1,11 @@
 import numpy as np
 from batchgenerators.dataloading.data_loader import SlimDataLoaderBase
 from batchgenerators.transforms.spatial_transforms import SpatialTransform
+from batchgenerators.transforms.color_transforms import GammaTransform, BrightnessMultiplicativeTransform, ContrastAugmentationTransform
 from batchgenerators.dataloading.single_threaded_augmenter import SingleThreadedAugmenter
 from batchgenerators.transforms.abstract_transforms import Compose
 from batchgenerators.transforms.abstract_transforms import RndTransform
+from batchgenerators.transforms.noise_transforms import GaussianNoiseTransform, GaussianBlurTransform
 import torch
 
 from .mask_to_bbox import mask_to_bbox
@@ -26,8 +28,31 @@ def get_data_augmentation(tensor):
                                          border_mode_data='constant', border_cval_data=0, order_data=1,
                                          random_crop=True)
     spatial_transform = RndTransform(spatial_transform, prob=0.3)
+
+    color_transform = BrightnessMultiplicativeTransform(
+        multiplier_range=(0.7, 1, 3))
+    color_transform = RndTransform(color_transform, prob=0.15)
+
+    contrast_transform = ContrastAugmentationTransform(
+        contrast_range=(0.65, 1.5))
+    contrast_transform = RndTransform(contrast_transform, prob=0.15)
+
+    gamma_transform = GammaTransform(gamma_range=(0.7, 1.5))
+    gamma_transform = RndTransform(gamma_transform, prob=0.15)
+
+    gaussian_blur = GaussianBlurTransform(blur_sigma=(0.7, 1.3))
+    gaussian_blur = RndTransform(gaussian_blur, prob=0.2)
+
+    gaussian_noise = GaussianNoiseTransform(noise_variance=(0, 0.1))
+    gaussian_noise = RndTransform(gaussian_noise, prob=0.15)
     multithreaded_generator = SingleThreadedAugmenter(
-        batch, Compose([spatial_transform]))
+        batch, Compose([spatial_transform,
+                        color_transform,
+                        contrast_transform,
+                        gamma_transform,
+                        gaussian_blur,
+                        gaussian_noise
+                        ]))
     return multithreaded_generator
 
 

@@ -26,6 +26,6 @@ def vision_output_function(data, config, *args, **params):
         if metric in which:
             result[metric +
                    " mean"] = "{:<7}".format(f"{np.mean(value):<2.2f}")[:7]
-            result[metric +
-                   " std"] = "{:<7}".format(f"{np.std(value):<2.2f}")[:7]
+            # result[metric +
+            #        " std"] = "{:<7}".format(f"{np.std(value):<2.2f}")[:7]
     return json.dumps(result, sort_keys=True)

@@ -163,6 +163,17 @@ def single_label_top2_accuracy(outputs, label, config, result=None):
     return result
 
 
+def general_accuracy(metric, result, name):
+    if result is None:
+        result = {
+            name: []
+        }
+    if result.get(name) is None:
+        result[name] = []
+    result[name].append(metric)
+    return result
+
+
 def ssim_accuracy(outputs: torch.Tensor, ground_truth: torch.Tensor, config):
     data_range = config.getint("data", "normalization")
     metric = SSIM(data_range=data_range)
@@ -183,6 +194,10 @@ def general_image_metrics(outputs: torch.Tensor, ground_truth: torch.Tensor, con
             "PSNR": [],
             "SSIM": []
         }
+    if result.get("PSNR") is None:
+        result["PSNR"] = []
+    if result.get("SSIM") is None:
+        result["SSIM"] = []
     psnr = psnr_accuracy(outputs, ground_truth, config)
     ssim = ssim_accuracy(outputs, ground_truth, config)
     result["PSNR"].append(psnr)
