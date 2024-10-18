@@ -31,11 +31,11 @@ class Symbiosis(nn.Module):
             "t2": data["t2"],
         }
         decomposed = self.decomposer(data, mode)
-        weight, mask_pred = torch.split(
+        bias, mask_pred = torch.split(
             self.enhancer(decomposed), 1, dim=1)
         mask_pred = torch.sigmoid(mask_pred)
-
-        enhanced = decomposed['t1']['mapping'] * weight
+        # \frac{1}{t_{1, obs}} = \frac{1}{t_{1,d}} + r[Gd]
+        enhanced = decomposed['t1']['mapping'] + bias
         loss = self.dice_loss(mask.squeeze(dim=1), mask_pred.squeeze(dim=1))
         acc_result = general_accuracy(
             dice := loss.detach().item(), acc_result, "DICE")
