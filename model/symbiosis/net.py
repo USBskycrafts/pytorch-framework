@@ -53,13 +53,9 @@ class Symbiosis(nn.Module):
                 else:
                     raise ValueError(
                         "Unknown modal name: {}".format(modal_name))
-                bs, *_ = component["pd_vector"].shape
-                dev = component['pd_vector'].device
-                loss += self.cos(component["pd_vector"],
-                                 component["mapping_vector"], -1 * torch.ones(bs, device=dev))
             for components in combinations(decomposed.values(), 2):
-                pd1 = components[0]["pd_vector"]
-                pd2 = components[1]["pd_vector"]
+                pd1 = components[0]["pd"]
+                pd2 = components[1]["pd"]
                 loss += self.l1_loss(pd1, pd2)
             loss += self.l1_loss(decomposed["t1ce"]["mapping"],
                                  enhanced)
