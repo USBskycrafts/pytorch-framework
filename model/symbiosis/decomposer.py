@@ -10,8 +10,8 @@ class Decomposer(nn.Module):
         super().__init__()
         # self.generator = GeneratorResNet(1, 2)
         self.encoder = UNetEncoder(1, 5)
-        self.pd_decoder = UNetDecoder(1, 5)
-        self.mapping_decoder = UNetDecoder(1, 5)
+        self.pd_decoder = UNetDecoder(1, 5, 'relu')
+        self.mapping_decoder = UNetDecoder(1, 5, 'relu')
         self.conv = DoubleConv(256, 512)
         self.projection_head = ProjectionHead(256, 512)
 

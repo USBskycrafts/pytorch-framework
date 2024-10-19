@@ -25,14 +25,14 @@ class UNetEncoder(nn.Module):
 
 
 class UNetDecoder(nn.Module):
-    def __init__(self, out_channels, layers=5):
+    def __init__(self, out_channels, layers=5, out_activation=None):
         super(UNetDecoder, self).__init__()
         self.model = nn.ModuleList()
         upper_bound = 512
         for layer in range(layers, 0, -1):
             self.model.append(Up(min(upper_bound, 2 ** (layer + 5)),
                               min(2 ** (layer + 4), upper_bound), layer))
-        self.out_conv = OutConv(32, out_channels)
+        self.out_conv = OutConv(32, out_channels, out_activation)
         print(f"decoder: {len(self.model) + 1} layers: {self}")
 
     def forward(self, features, x):

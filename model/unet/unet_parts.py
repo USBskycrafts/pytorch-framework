@@ -76,11 +76,19 @@ class Up(nn.Module):
 
 
 class OutConv(nn.Module):
-    def __init__(self, in_channels, out_channels):
+    def __init__(self, in_channels, out_channels, activation=None):
         super(OutConv, self).__init__()
+        if activation == 'relu':
+            activation = nn.ReLU(inplace=True)
+        elif activation == 'sigmoid':
+            activation = nn.Sigmoid()
+        elif activation == 'softplus':
+            activation = nn.Softplus()
+        else:
+            activation = nn.Identity()
         self.model = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
-            nn.Softplus()
+            activation
         )
 
     def forward(self, x):
