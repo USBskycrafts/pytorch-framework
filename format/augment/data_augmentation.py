@@ -3,6 +3,7 @@ from batchgenerators.dataloading.data_loader import SlimDataLoaderBase
 from batchgenerators.transforms.spatial_transforms import SpatialTransform
 from batchgenerators.transforms.color_transforms import GammaTransform, BrightnessMultiplicativeTransform, ContrastAugmentationTransform
 from batchgenerators.dataloading.single_threaded_augmenter import SingleThreadedAugmenter
+from batchgenerators.dataloading.multi_threaded_augmenter import MultiThreadedAugmenter
 from batchgenerators.transforms.abstract_transforms import Compose
 from batchgenerators.transforms.abstract_transforms import RndTransform
 from batchgenerators.transforms.noise_transforms import GaussianNoiseTransform, GaussianBlurTransform
@@ -11,7 +12,7 @@ import torch
 from .mask_to_bbox import mask_to_bbox
 
 
-def get_data_augmentation(tensor):
+def get_spatial_data_augmentation(tensor):
     bs, c, h, w = tensor.shape
     mask = tensor[:, 3]
     bboxes = [mask_to_bbox(x) for x in np.split(mask, bs, axis=0)]
@@ -28,6 +29,15 @@ def get_data_augmentation(tensor):
                                          border_mode_data='constant', border_cval_data=0, order_data=1,
                                          random_crop=True)
     spatial_transform = RndTransform(spatial_transform, prob=0.3)
+
+    multithreaded_generator = SingleThreadedAugmenter(
+        batch, Compose([spatial_transform]))
+    return multithreaded_generator
+
+
+def get_other_data_augmentation(tensor):
+    bs, c, h, w = tensor.shape
+    batch = DataLoader(tensor, bs)
 
     color_transform = BrightnessMultiplicativeTransform(
         multiplier_range=(0.7, 1, 3))
@@ -46,8 +56,7 @@ def get_data_augmentation(tensor):
     gaussian_noise = GaussianNoiseTransform(noise_variance=(0, 0.1))
     gaussian_noise = RndTransform(gaussian_noise, prob=0.15)
     multithreaded_generator = SingleThreadedAugmenter(
-        batch, Compose([spatial_transform,
-                        color_transform,
+        batch, Compose([color_transform,
                         contrast_transform,
                         gamma_transform,
                         gaussian_blur,

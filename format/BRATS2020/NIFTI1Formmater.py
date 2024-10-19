@@ -2,7 +2,7 @@ import logging
 from typing import Dict, List
 import torch
 from format.Basic import BasicFormatter
-from format.augment.data_augmentation import get_data_augmentation
+from format.augment.data_augmentation import get_spatial_data_augmentation, get_other_data_augmentation
 
 
 class NIFTI1Formatter(BasicFormatter):
@@ -28,13 +28,19 @@ class NIFTI1Formatter(BasicFormatter):
             'layer': torch.stack(layer_list, dim=0),
         }
         if mode != 'test' or True:
-            aug = get_data_augmentation(
+            aug = get_spatial_data_augmentation(
                 torch.cat([batch['t1'], batch['t2'],
                           batch['t1ce'], batch['mask']], dim=1).numpy(),
             )
             aug = next(aug)
             aug['data'] = torch.from_numpy(aug['data'])
             t1, t2, t1ce, mask = torch.split(aug['data'], 1, dim=1)
+            aug = get_other_data_augmentation(
+                torch.cat([batch['t1'], batch['t2'],
+                           batch['t1ce']], dim=1).numpy())
+            aug = next(aug)
+            aug['data'] = torch.from_numpy(aug['data'])
+            t1, t2, t1ce = torch.split(aug['data'], 1, dim=1)
             assert batch['t1'].shape == t1.shape
             batch['t1'] = t1
             batch['t2'] = t2
