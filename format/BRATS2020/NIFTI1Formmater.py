@@ -27,7 +27,7 @@ class NIFTI1Formatter(BasicFormatter):
             'number': torch.stack(number_list, dim=0),
             'layer': torch.stack(layer_list, dim=0),
         }
-        if mode != 'test' or True:
+        if mode == 'train':
             aug = get_spatial_data_augmentation(
                 torch.cat([batch['t1'], batch['t2'],
                           batch['t1ce'], batch['mask']], dim=1).numpy(),
@@ -46,4 +46,5 @@ class NIFTI1Formatter(BasicFormatter):
             batch['t2'] = t2
             batch['t1ce'] = t1ce
             batch['mask'] = mask
+            assert torch.le(mask, 1).all() and torch.ge(mask, 0).all()
         return batch
