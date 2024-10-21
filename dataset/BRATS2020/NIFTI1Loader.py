@@ -47,6 +47,7 @@ class NIFTI1Loader(Dataset):
 
                 def normalize(tensor):
                     # normalize
+                    tensor = (tensor - torch.mean(tensor)) / torch.std(tensor)
                     tensor = (tensor - tensor.min()) / \
                         (tensor.max() - tensor.min())
                     return tensor
