@@ -74,6 +74,20 @@ class FocalLoss(nn.Module):
             return loss.mean()
         else:
             return loss.sum()
+        
+
+class BCELoss2d(nn.Module):
+    """
+    Binary Cross Entropy loss function
+    """
+    def __init__(self):
+        super(BCELoss2d, self).__init__()
+        self.bce_loss = nn.BCEWithLogitsLoss()
+
+    def forward(self, logits, labels):
+        logits_flat = logits.view(-1)
+        labels_flat = labels.view(-1)
+        return self.bce_loss(logits_flat, labels_flat)
 
 
 def dice_coeff(input: Tensor, target: Tensor, reduce_batch_first: bool = False, epsilon: float = 1e-6):
