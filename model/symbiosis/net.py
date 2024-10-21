@@ -6,7 +6,7 @@ from .enhancer import Enhancer
 from .decomposer import Decomposer
 from itertools import combinations
 from tools.accuracy_tool import general_accuracy, general_image_metrics
-from model.loss import DiceLoss, SobelLoss, WeightedBCELoss
+from model.loss import BCELoss2d, DiceLoss, SobelLoss, FocalLoss2d
 
 
 class Symbiosis(nn.Module):
@@ -18,7 +18,7 @@ class Symbiosis(nn.Module):
         self.l1_loss = nn.L1Loss()
         self.cos = nn.CosineEmbeddingLoss(margin=0.5)
         self.sobel_loss = SobelLoss()
-        self.bce_loss = WeightedBCELoss()
+        self.focal_loss = FocalLoss2d()
         self.dice_loss = DiceLoss(multiclass=False)
 
     def init_multi_gpu(self, device, config, *args, **kwargs):
@@ -38,11 +38,11 @@ class Symbiosis(nn.Module):
         bias = torch.relu(bias)
         # \frac{1}{t_{1, obs}} = \frac{1}{t_{1,d}} + r[Gd]
         enhanced = decomposed['t1']['mapping'] + \
-            (2 * (mask_pred > 0.6) + 1) * bias
+            (1 * (mask_pred > 0.7) + 1) * bias
         loss = self.dice_loss(mask.squeeze(dim=1), mask_pred.squeeze(dim=1))
         acc_result = general_accuracy(
             dice := loss.detach().item(), acc_result, "DICE")
-        loss += self.bce_loss(mask_pred, mask)
+        loss += self.focal_loss(mask_pred, mask)
         if mode != "test":
             for modal_name, component in decomposed.items():
                 pd = component["pd"]

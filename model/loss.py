@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from torch import Tensor
+from torchvision.ops import sigmoid_focal_loss
 import numpy as np
 
 
@@ -140,6 +141,17 @@ class WeightedBCELoss(nn.Module):
         wbce = F.binary_cross_entropy_with_logits(pred, mask, reduce=None)
         wbce = (weight*wbce).sum(dim=(2, 3)) / weight.sum(dim=(2, 3))
         return wbce.mean()
+
+
+class FocalLoss2d(nn.Module):
+    def __init__(self, alpha=0.25, gamma=2, reduction='mean'):
+        super(FocalLoss2d, self).__init__()
+        self.gamma = gamma
+        self.alpha = alpha
+        self.reduction = reduction
+
+    def forward(self, input, target):
+        return sigmoid_focal_loss(input, target, self.alpha, self.gamma, self.reduction)
 
 
 class SobelLoss(nn.Module):
