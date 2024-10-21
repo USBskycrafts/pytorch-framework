@@ -1,3 +1,4 @@
+from typing import Literal
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -128,16 +129,18 @@ class DiceLoss(nn.Module):
 
 
 class WeightedBCELoss(nn.Module):
-    def __init__(self):
+    def __init__(self, local_size):
         super(WeightedBCELoss, self).__init__()
+        self.local_size = local_size
+        assert local_size % 2 == 1, "local_size must be odd"
 
     def forward(self, pred, mask):
         return self.wbce_loss(pred, mask)
 
     def wbce_loss(self, pred, mask):
         weight = 1 + 5 * \
-            torch.abs(F.avg_pool2d(mask, kernel_size=31,
-                                   stride=1, padding=15) - mask)
+            torch.abs(F.avg_pool2d(mask, kernel_size=self.local_size,
+                                   stride=1, padding=self.local_size // 2) - mask)
         wbce = F.binary_cross_entropy_with_logits(pred, mask, reduce=None)
         wbce = (weight*wbce).sum(dim=(2, 3)) / weight.sum(dim=(2, 3))
         return wbce.mean()
