@@ -6,6 +6,7 @@ import logging
 from tools.init_tool import init_all
 from config_parser import create_config
 from tools.train_tool import train
+from torch.distributed import init_process_group
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                     datefmt='%m/%d/%Y %H:%M:%S',
@@ -28,7 +29,7 @@ if __name__ == "__main__":
 
     config = create_config(configFilePath)
     if config.getboolean("distributed", "use"):
-        torch.distributed.init_process_group(
+        init_process_group(
             backend=config.get("distributed", "backend")
         )
 

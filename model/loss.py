@@ -74,12 +74,13 @@ class FocalLoss(nn.Module):
             return loss.mean()
         else:
             return loss.sum()
-        
+
 
 class BCELoss2d(nn.Module):
     """
     Binary Cross Entropy loss function
     """
+
     def __init__(self):
         super(BCELoss2d, self).__init__()
         self.bce_loss = nn.BCEWithLogitsLoss()
@@ -123,6 +124,22 @@ class DiceLoss(nn.Module):
 
     def forward(self, input, target):
         return dice_loss(input, target, multiclass=self.multiclass)
+
+
+class WeightedBCELoss(nn.Module):
+    def __init__(self):
+        super(WeightedBCELoss, self).__init__()
+
+    def forward(self, pred, mask):
+        return self.wbce_loss(pred, mask)
+
+    def wbce_loss(self, pred, mask):
+        weight = 1 + 5 * \
+            torch.abs(F.avg_pool2d(mask, kernel_size=31,
+                                   stride=1, padding=15) - mask)
+        wbce = F.binary_cross_entropy_with_logits(pred, mask, reduce=None)
+        wbce = (weight*wbce).sum(dim=(2, 3)) / weight.sum(dim=(2, 3))
+        return wbce.mean()
 
 
 class SobelLoss(nn.Module):
