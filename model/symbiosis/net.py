@@ -38,10 +38,10 @@ class Symbiosis(nn.Module):
         bias = torch.relu(bias)
         # \frac{1}{t_{1, obs}} = \frac{1}{t_{1,d}} + r[Gd]
         enhanced = decomposed['t1']['mapping'] + \
-            (1 * (mask_pred > 0.7) + 1) * bias
+            bias + 2 * (mask_pred > 0.7)
         loss = self.dice_loss(mask.squeeze(dim=1), mask_pred.squeeze(dim=1))
         acc_result = general_accuracy(
-            dice := loss.detach().item(), acc_result, "DICE")
+            dice := 1 - loss.detach().item(), acc_result, "DICE")
         loss += self.focal_loss(mask_pred, mask)
         if mode != "test":
             for modal_name, component in decomposed.items():
