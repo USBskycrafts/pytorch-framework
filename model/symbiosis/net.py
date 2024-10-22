@@ -7,6 +7,7 @@ from .decomposer import Decomposer
 from itertools import combinations
 from tools.accuracy_tool import general_accuracy, general_image_metrics
 from model.loss import BCELoss2d, DiceLoss, SobelLoss, FocalLoss2d
+from .taylor import taylor_approximation
 
 
 class Symbiosis(nn.Module):
@@ -14,9 +15,8 @@ class Symbiosis(nn.Module):
         super().__init__()
         self.enhancer = Enhancer()
         self.decomposer = Decomposer()
-        self.project_head = ProjectionHead()
+        self.project_head = ProjectionHead(1, 16)
         self.l1_loss = nn.L1Loss()
-        self.cos = nn.CosineEmbeddingLoss(margin=0.5)
         self.sobel_loss = SobelLoss()
         self.focal_loss = FocalLoss2d()
         self.dice_loss = DiceLoss(multiclass=False)
@@ -32,16 +32,14 @@ class Symbiosis(nn.Module):
             "t2": data["t2"],
         }
         decomposed = self.decomposer(data, mode)
-        bias, mask_pred = torch.split(
-            self.enhancer(data), 1, dim=1)
-        mask_pred = torch.sigmoid(mask_pred)
-        bias = torch.relu(bias)
+        mask_pred = self.enhancer(data)
         # \frac{1}{t_{1, obs}} = \frac{1}{t_{1,d}} + r[Gd]
+        coefficients = self.project_head(mask_pred)
         enhanced = decomposed['t1']['mapping'] + \
-            (1 * (mask_pred > 0.7) + 1) * bias
+            taylor_approximation(mask_pred, coefficients)
         loss = self.dice_loss(mask.squeeze(dim=1), mask_pred.squeeze(dim=1))
         acc_result = general_accuracy(
-            dice := loss.detach().item(), acc_result, "DICE")
+            1 - loss.detach().item(), acc_result, "DICE")
         loss += self.focal_loss(mask_pred, mask)
         if mode != "test":
             for modal_name, component in decomposed.items():

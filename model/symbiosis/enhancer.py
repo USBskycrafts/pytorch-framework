@@ -8,7 +8,7 @@ class Enhancer(nn.Module):
     def __init__(self):
         super().__init__()
         self.encoder = UNetEncoder(2, 5)
-        self.decoder = UNetDecoder(2, 5)
+        self.decoder = UNetDecoder(1, 5, 'sigmoid')
 
     def forward(self, data):
         x = torch.cat([data["t1"],
