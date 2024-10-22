@@ -10,10 +10,7 @@ def taylor_approximation(x, coefficients: torch.Tensor):
     for order in range(coefficients.shape[1]):
         # print(coefficients[:, order:order+1].shape,
         #   x.shape, offset.shape, y.shape)
-        if order == 1:
-            y += F.relu(coefficients[:, order:order+1]) * (x - offset) ** order
-        else:
-            y += coefficients[:, order:order+1] * (x - offset) ** order
+        y += coefficients[:, order:order+1] * (x - offset) ** order
     return y
 
 
