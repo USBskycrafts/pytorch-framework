@@ -47,15 +47,15 @@ class NIFTI1Loader(Dataset):
 
                 def normalize(tensor):
                     # normalize
-                    tensor = (tensor - torch.mean(tensor)) / torch.std(tensor)
                     tensor = (tensor - tensor.min()) / \
                         (tensor.max() - tensor.min())
+                    tensor = (tensor - torch.mean(tensor)) / torch.std(tensor)
                     return tensor
                 T1, T2, T1CE, label = map(load_from_path, [
                     self.t1_dir, self.t2_dir, self.t1ce_dir, self.label_dir], [T1, T2, T1CE, label])
                 T1, T2, T1CE = map(normalize, [T1, T2, T1CE])
                 n_channels, *_ = T1.shape
-                mask = (label == 4) * torch.ones_like(label)  
+                mask = (label == 4) * torch.ones_like(label)
 
                 T1, T2, T1CE, mask = map(lambda x: self.data_process(
                     x, config, mode, *args, **kwargs), [T1, T2, T1CE, mask])

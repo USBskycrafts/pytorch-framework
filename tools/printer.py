@@ -6,7 +6,6 @@ from typing import Dict
 import numpy as np
 
 
-
 class Printer:
     def __init__(self, config):
         self.config = config
@@ -30,12 +29,15 @@ class Printer:
     def print(self, data: Dict[str, torch.Tensor], step):
         modals = data.keys()
         arrays = zip(*[torch.split(x, 1, dim=0) for x in data.values()])
-        
+
         for images in arrays:
             fig, axes = plt.subplots(1, 4)
-            view = [(modal, image) for modal, image in zip(modals, images) if modal in ['t1', 't2', 't1ce', 'pred']]
-            mark = {key: label.item() for key, label in zip(modals, images) if key in ['number', 'layer']}
+            view = [(modal, image) for modal, image in zip(
+                modals, images) if modal in ['t1', 't2', 't1ce', 'pred']]
+            mark = {key: label.item() for key, label in zip(
+                modals, images) if key in ['number', 'layer']}
             for i, (modal, image) in enumerate(view):
+                image = (image - image.min()) / (image.max() - image.min())
                 image = image.squeeze(dim=0).permute(1, 2, 0).numpy()
                 ax = axes[i]
                 ax.set_title(

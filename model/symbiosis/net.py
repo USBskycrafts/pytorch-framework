@@ -1,11 +1,10 @@
 import torch
 import torch.nn as nn
 
-from model.symbiosis.projection_head import ProjectionHead
+from model.residual.res_net import GeneratorResNet
 from .segmentation import SegmentationNet
-from itertools import combinations
 from tools.accuracy_tool import general_accuracy, general_image_metrics
-from model.loss import DiceLoss, WeightedBCELoss
+from model.loss import DiceLoss, FocalLoss2d
 from .taylor import taylor_approximation
 
 
@@ -13,9 +12,9 @@ class Symbiosis(nn.Module):
     def __init__(self, config, gpu_list, *args, **kwargs):
         super().__init__()
         self.seg = SegmentationNet()
-        self.project = ProjectionHead(2, 32)
+        self.project = GeneratorResNet(2, 1)
         self.dice_loss = DiceLoss(multiclass=False)
-        self.wbce = WeightedBCELoss(local_size=9)
+        self.focal_loss = FocalLoss2d()
         self.l1_loss = nn.L1Loss()
 
     def init_multi_gpu(self, device, config, *args, **kwargs):
@@ -28,14 +27,13 @@ class Symbiosis(nn.Module):
             "t1ce": data["t1ce"],
             "t2": data["t2"],
         }
-        mask_pred = self.seg(data)
-        coefficients = self.project(torch.cat([data['t1'], mask_pred], dim=1))
-        bias = taylor_approximation(mask_pred, coefficients)
+        logits = self.seg(data)
+        bias = self.project(torch.cat([logits, data['t1']], dim=1))
         pred = data['t1'] + bias
 
-        loss = self.dice_loss(mask_pred.squeeze(dim=1), mask.squeeze(dim=1)) + \
-            self.l1_loss(pred, data['t1ce']) + \
-            self.wbce(mask_pred, mask)
+        loss = self.dice_loss(logits.squeeze(dim=1), mask.squeeze(dim=1)) + \
+            self.focal_loss(logits, mask) + \
+            self.l1_loss(pred, data['t1ce'])
 
         acc_result = general_image_metrics(
             pred, data["t1ce"], config, acc_result)

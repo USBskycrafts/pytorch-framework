@@ -54,7 +54,7 @@ class GeneratorResNet(nn.Module):
         # 将(3)的数据每一个都映射到[-1, 1]之间
         model += [nn.ReflectionPad2d(3),
                   nn.Conv2d(out_features, output_dim, 7),
-                  nn.Softplus()]
+                  nn.Tanh()]
 
         self.model = nn.Sequential(*model)
 

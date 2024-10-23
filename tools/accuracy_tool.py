@@ -198,6 +198,9 @@ def general_image_metrics(outputs: torch.Tensor, ground_truth: torch.Tensor, con
         result["PSNR"] = []
     if result.get("SSIM") is None:
         result["SSIM"] = []
+    outputs = (outputs - outputs.min()) / (outputs.max() - outputs.min())
+    ground_truth = (ground_truth - ground_truth.min()) / \
+        (ground_truth.max() - ground_truth.min())
     psnr = psnr_accuracy(outputs, ground_truth, config)
     ssim = ssim_accuracy(outputs, ground_truth, config)
     result["PSNR"].append(psnr)
