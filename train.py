@@ -45,8 +45,6 @@ if __name__ == "__main__":
         for a in range(0, len(device_list)):
             gpu_list.append(int(a))
 
-    os.system("clear")
-
     cuda = torch.cuda.is_available()
     logger.info("CUDA available: %s" % str(cuda))
     if not cuda and len(gpu_list) > 0:

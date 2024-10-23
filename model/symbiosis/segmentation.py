@@ -4,7 +4,7 @@ from model.residual.res_net import GeneratorResNet
 from model.unet.unet_model import UNetDecoder, UNetEncoder
 
 
-class Enhancer(nn.Module):
+class SegmentationNet(nn.Module):
     def __init__(self):
         super().__init__()
         self.encoder = UNetEncoder(2, 5)
