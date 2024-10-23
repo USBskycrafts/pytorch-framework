@@ -15,7 +15,7 @@ def taylor_approximation(x, coefficients: torch.Tensor):
         # print(a.shape, b.shape)
         # print(torch.prod(a / b, dim=1).shape,
         #       coefficients[:, n:n+1, :, :].shape, y.shape)
-        y += coefficients[:, n:n+1, :, :] * torch.prod(a / b, dim=1)
+        y += F.relu(coefficients[:, n:n+1, :, :]) * torch.prod(a / b, dim=1)
     return y
 
 
