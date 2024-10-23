@@ -25,6 +25,7 @@ def init_optimizer(model, config, *args, **params):
         optimizer = AdaBound(
             model.parameters(),
             lr=learning_rate,
+            final_lr=learning_rate * 100,
             weight_decay=config.getfloat("train", "weight_decay")
         )
     else:
