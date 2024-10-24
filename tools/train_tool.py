@@ -70,6 +70,7 @@ def train(parameters, config, gpu_list, do_test=False):
                  "Loss",   "Output Information", '\n', config)
 
     total_len = len(dataset)
+    scaler = torch.GradScaler('cuda')
     more = ""
     if total_len < 10000:
         more = "\t"
@@ -94,13 +95,14 @@ def train(parameters, config, gpu_list, do_test=False):
 
             optimizer.zero_grad()
 
-            results = model(data, config, gpu_list, acc_result, "train")
-
-            loss, acc_result = results["loss"], results["acc_result"]
+            with torch.autocast('cuda'):
+                results = model(data, config, gpu_list, acc_result, "train")
+                loss, acc_result = results["loss"], results["acc_result"]
+            scaler.scale(loss).backward()
             total_loss += float(loss)
 
-            loss.backward()
-            optimizer.step()
+            scaler.step(optimizer)
+            scaler.update()
 
             if step % output_time == 0:
                 output_info = output_function(acc_result, config)

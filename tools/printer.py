@@ -37,7 +37,6 @@ class Printer:
             mark = {key: label.item() for key, label in zip(
                 modals, images) if key in ['number', 'layer']}
             for i, (modal, image) in enumerate(view):
-                image = (image - image.min()) / (image.max() - image.min())
                 image = image.squeeze(dim=0).permute(1, 2, 0).numpy()
                 ax = axes[i]
                 ax.set_title(
