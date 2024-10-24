@@ -31,10 +31,14 @@ class Symbiosis(nn.Module):
         bias = self.project(torch.cat([logits, data['t1']], dim=1))
         pred = data['t1'] + bias
 
-        loss = self.dice_loss(logits.squeeze(dim=1), mask.squeeze(dim=1)) + \
-            self.focal_loss(logits, mask) + \
-            self.l1_loss(pred, data['t1ce'])
+        dice_loss = self.dice_loss(logits.squeeze(dim=1), mask.squeeze(dim=1))
+        focal_loss = self.focal_loss(logits, mask)
+        l1_loss = self.l1_loss(pred, data['t1ce'])
+        loss = dice_loss + focal_loss + l1_loss
 
+        acc_result = general_accuracy(
+            1 - dice_loss, acc_result, "DICE"
+        )
         acc_result = general_image_metrics(
             pred, data["t1ce"], config, acc_result)
 
