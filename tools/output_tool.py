@@ -20,12 +20,10 @@ def basic_output_function(data, config, *args, **params):
 
 def vision_output_function(data, config, *args, **params):
     # data is the output from accuracy_tool
-    which = config.get("output", "output_value").replace(" ", "").split(",")
     result = {}
     for metric, value in data.items():
-        if metric in which:
-            result[metric +
-                   " mean"] = "{:<7}".format(f"{np.mean(value):<2.2f}")[:7]
-            # result[metric +
-            #        " std"] = "{:<7}".format(f"{np.std(value):<2.2f}")[:7]
-    return json.dumps(result, sort_keys=True)
+        result[metric +
+                " mean"] = "{:<7}".format(f"{np.mean(value):<2.2f}")[:7]
+        # result[metric +
+        #        " std"] = "{:<7}".format(f"{np.std(value):<2.2f}")[:7]
+    return json.dumps(result, sort_keys=True, ensure_ascii=False)

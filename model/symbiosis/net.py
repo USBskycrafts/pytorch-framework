@@ -35,10 +35,10 @@ class Symbiosis(nn.Module):
         loss = l1_loss + dice_loss + wbce_loss
 
         acc_result = general_accuracy(
-            1 - dice_loss.item(), acc_result, "DICE"
+            dice_loss.item(), acc_result, "DICE↓"
         )
         acc_result = general_accuracy(
-            wbce_loss.item(), acc_result, "WBCE"
+            wbce_loss.item(), acc_result, "WBCE↓"
         )
         acc_result = general_image_metrics(
             pred, data["t1ce"], config, acc_result)

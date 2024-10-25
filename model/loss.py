@@ -143,7 +143,7 @@ class WeightedBCELoss(nn.Module):
                                    stride=1, padding=self.local_size // 2) - mask)
         wbce = F.binary_cross_entropy_with_logits(pred, mask, reduce=None)
         wbce = (weight*wbce).sum(dim=(2, 3)) / weight.sum(dim=(2, 3))
-        return wbce.mean()
+        return wbce.sum(dim=1, keepdim=True).mean()
 
 
 class FocalLoss2d(nn.Module):
