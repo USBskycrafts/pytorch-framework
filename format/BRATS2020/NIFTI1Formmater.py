@@ -54,4 +54,7 @@ class NIFTI1Formatter(BasicFormatter):
             batch['t1ce'] = t1ce
             batch['mask'] = (mask := generate_mask(mask))
             assert torch.le(mask, 1).all() and torch.ge(mask, 0).all()
+        else:
+            batch['mask'] = generate_mask(batch['mask'])
+            assert torch.le(batch['mask'], 1).all() and torch.ge(batch['mask'], 0).all()
         return batch

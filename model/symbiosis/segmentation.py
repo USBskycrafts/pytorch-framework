@@ -8,7 +8,7 @@ class SegmentationNet(nn.Module):
     def __init__(self, input_channels, output_channels):
         super().__init__()
         self.encoder = UNetEncoder(input_channels, 5)
-        self.decoder = UNetDecoder(output_channels, 5, 'sigmoid')
+        self.decoder = UNetDecoder(output_channels, 5)
 
     def forward(self, data):
         x = torch.cat([data["t1"],

@@ -8,7 +8,8 @@ from timeit import default_timer as timer
 
 from tools.eval_tool import valid, gen_time_str, output_value
 from tools.init_tool import init_test_dataset, init_formatter
-
+from torch.cuda.amp.autocast_mode import autocast
+from torch.cuda.amp.grad_scaler import GradScaler
 logger = logging.getLogger(__name__)
 
 
@@ -70,7 +71,7 @@ def train(parameters, config, gpu_list, do_test=False):
                  "Loss",   "Output Information", '\n', config)
 
     total_len = len(dataset)
-    scaler = torch.GradScaler('cuda')
+    scaler = GradScaler()
     more = ""
     if total_len < 10000:
         more = "\t"
@@ -95,12 +96,15 @@ def train(parameters, config, gpu_list, do_test=False):
 
             optimizer.zero_grad()
 
-            with torch.autocast('cuda'):
+            with autocast():
                 results = model(data, config, gpu_list, acc_result, "train")
                 loss, acc_result = results["loss"], results["acc_result"]
-            scaler.scale(loss).backward()
-            total_loss += float(loss)
 
+            if isinstance(scaled_loss := scaler.scale(loss), torch.Tensor):
+                scaled_loss.backward()
+                total_loss += float(loss)
+            else:
+                raise TypeError("Loss is not a tensor")
             scaler.step(optimizer)
             scaler.update()
 
