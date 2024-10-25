@@ -5,10 +5,10 @@ from model.unet.unet_model import UNetDecoder, UNetEncoder
 
 
 class SegmentationNet(nn.Module):
-    def __init__(self):
+    def __init__(self, input_channels, output_channels):
         super().__init__()
-        self.encoder = UNetEncoder(2, 5)
-        self.decoder = UNetDecoder(1, 5, 'sigmoid')
+        self.encoder = UNetEncoder(input_channels, 5)
+        self.decoder = UNetDecoder(output_channels, 5, 'sigmoid')
 
     def forward(self, data):
         x = torch.cat([data["t1"],

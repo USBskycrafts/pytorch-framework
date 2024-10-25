@@ -45,19 +45,17 @@ class NIFTI1Loader(Dataset):
                     tensor = tensor.permute(2, 0, 1)
                     return tensor
 
-                def normalize(tensor):
-                    # normalize
-                    tensor = (tensor - tensor.min()) / \
-                        (tensor.max() - tensor.min())
+                def stdandardlize(tensor):
+                    tensor = (tensor - tensor.min()) / (tensor.max() - tensor.min())
+                    tensor = (tensor - tensor.mean()) / tensor.std()
                     return tensor
                 T1, T2, T1CE, label = map(load_from_path, [
                     self.t1_dir, self.t2_dir, self.t1ce_dir, self.label_dir], [T1, T2, T1CE, label])
-                T1, T2, T1CE = map(normalize, [T1, T2, T1CE])
+                T1, T2, T1CE = map(stdandardlize, [T1, T2, T1CE])
                 n_channels, *_ = T1.shape
-                mask = (label == 4) * torch.ones_like(label)
 
-                T1, T2, T1CE, mask = map(lambda x: self.data_process(
-                    x, config, mode, *args, **kwargs), [T1, T2, T1CE, mask])
+                T1, T2, T1CE, label = map(lambda x: self.data_process(
+                    x, config, mode, *args, **kwargs), [T1, T2, T1CE, label])
                 self.data_list.extend({
                     "t1": t1,
                     "t2": t2,
@@ -65,7 +63,7 @@ class NIFTI1Loader(Dataset):
                     "mask": mask,
                     "number": torch.tensor(number),
                     "layer": torch.tensor(i + n_channels // 2 - n_channels // 4)
-                } for i, (t1, t2, t1ce, mask) in enumerate(zip(T1, T2, T1CE, mask)))
+                } for i, (t1, t2, t1ce, mask) in enumerate(zip(T1, T2, T1CE, label)))
         self.logger.info("Loaded %d %s data" % (cnt, mode))
 
     def __getitem__(self, index):

@@ -175,16 +175,14 @@ def general_accuracy(metric, result, name):
 
 
 def ssim_accuracy(outputs: torch.Tensor, ground_truth: torch.Tensor, config):
-    data_range = config.getint("data", "normalization")
-    metric = SSIM(data_range=data_range)
-    metric.update([outputs, ground_truth])
+    metric = SSIM(data_range=2)
+    metric.update([outputs.float(), ground_truth.float()])
     return metric.compute() * 100
 
 
 def psnr_accuracy(outputs: torch.Tensor, ground_truth: torch.Tensor, config):
-    data_range = config.getint("data", "normalization")
-    metric = PSNR(data_range=data_range)
-    metric.update([outputs, ground_truth])
+    metric = PSNR(data_range=2)
+    metric.update([outputs.float(), ground_truth.float()])
     return metric.compute()
 
 
