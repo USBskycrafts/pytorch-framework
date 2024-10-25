@@ -19,12 +19,15 @@ class NIFTI1Formatter(BasicFormatter):
         mask_list = [mask for mask in map(lambda x: x['mask'], data)]
         number_list = [number for number in map(lambda x: x['number'], data)]
         layer_list = [number for number in map(lambda x: x['layer'], data)]
-        
+
         def generate_mask(label: torch.Tensor) -> torch.Tensor:
             enhanceing_tumor = (label == 4) * torch.ones_like(label)
-            tumor_core = (label == 1) * torch.ones_like(label) + (label == 4) * torch.ones_like(label)
-            whole_tumor = (label == 1) * torch.ones_like(label) + (label == 2) * torch.ones_like(label) + (label == 4) * torch.ones_like(label)
-            mask = torch.cat([enhanceing_tumor, tumor_core, whole_tumor], dim=1)
+            tumor_core = (label == 1) * torch.ones_like(label) + \
+                (label == 4) * torch.ones_like(label)
+            whole_tumor = (label == 1) * torch.ones_like(label) + (label == 2) * \
+                torch.ones_like(label) + (label == 4) * torch.ones_like(label)
+            mask = torch.cat(
+                [enhanceing_tumor, tumor_core, whole_tumor], dim=1)
             return mask
         batch = {
             't1': torch.stack(t1_list, dim=0),
@@ -56,5 +59,6 @@ class NIFTI1Formatter(BasicFormatter):
             assert torch.le(mask, 1).all() and torch.ge(mask, 0).all()
         else:
             batch['mask'] = generate_mask(batch['mask'])
-            assert torch.le(batch['mask'], 1).all() and torch.ge(batch['mask'], 0).all()
+            assert torch.le(batch['mask'], 1).all(
+            ) and torch.ge(batch['mask'], 0).all()
         return batch

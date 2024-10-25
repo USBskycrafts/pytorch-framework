@@ -46,7 +46,8 @@ class NIFTI1Loader(Dataset):
                     return tensor
 
                 def stdandardlize(tensor):
-                    tensor = (tensor - tensor.min()) / (tensor.max() - tensor.min())
+                    tensor = (tensor - tensor.min()) / \
+                        (tensor.max() - tensor.min())
                     return tensor
                 T1, T2, T1CE, label = map(load_from_path, [
                     self.t1_dir, self.t2_dir, self.t1ce_dir, self.label_dir], [T1, T2, T1CE, label])

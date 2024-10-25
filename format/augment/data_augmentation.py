@@ -7,7 +7,6 @@ from batchgenerators.dataloading.multi_threaded_augmenter import MultiThreadedAu
 from batchgenerators.transforms.abstract_transforms import Compose
 from batchgenerators.transforms.abstract_transforms import RndTransform
 from batchgenerators.transforms.noise_transforms import GaussianNoiseTransform, GaussianBlurTransform
-import torch
 
 from .mask_to_bbox import mask_to_bbox
 
@@ -55,6 +54,7 @@ def get_other_data_augmentation(tensor):
 
     gaussian_noise = GaussianNoiseTransform(noise_variance=(0, 0.1))
     gaussian_noise = RndTransform(gaussian_noise, prob=0.15)
+
     multithreaded_generator = SingleThreadedAugmenter(
         batch, Compose([color_transform,
                         contrast_transform,
