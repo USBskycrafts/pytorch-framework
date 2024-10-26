@@ -3,6 +3,7 @@ import logging
 
 import format as form
 from dataset import dataset_list
+from torch.utils.data.distributed import DistributedSampler
 
 logger = logging.getLogger(__name__)
 
@@ -69,13 +70,15 @@ def init_one_dataset(config, mode, *args, **params):
             except Exception as e:
                 logger.warning(
                     "[eval] reader num has not been defined in config file, use [train] reader num instead.")
-
+        if config.getboolean("distributed", "use"):
+            sampler = DistributedSampler(dataset)  # 这个sampler会自动分配数据到各个gpu上
         dataloader = DataLoader(dataset=dataset,
                                 batch_size=batch_size,
                                 shuffle=shuffle,
                                 num_workers=reader_num,
                                 collate_fn=collate_fn[mode],
-                                drop_last=drop_last)
+                                drop_last=drop_last,
+                                sampler=sampler if config.getboolean("distributed", "use") else None)
 
         return dataloader
     else:

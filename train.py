@@ -6,7 +6,7 @@ import logging
 from tools.init_tool import init_all
 from config_parser import create_config
 from tools.train_tool import train
-from torch.distributed import init_process_group
+from torch.distributed import init_process_group, get_rank
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                     datefmt='%m/%d/%Y %H:%M:%S',
@@ -32,6 +32,9 @@ if __name__ == "__main__":
         init_process_group(
             backend=config.get("distributed", "backend")
         )
+        local_rank = get_rank()
+        torch.cuda.set_device(local_rank)
+        device = torch.device("cuda", local_rank)
 
     use_gpu = True
     gpu_list = []
