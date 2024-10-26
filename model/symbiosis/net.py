@@ -21,6 +21,7 @@ class Symbiosis(nn.Module):
             nn.SiLU(inplace=True),
         )
         self.l1_loss = nn.L1Loss()
+        print(self)
 
     def init_multi_gpu(self, device, config, *args, **kwargs):
         pass

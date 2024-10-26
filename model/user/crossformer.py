@@ -9,11 +9,11 @@ class CrossformerEncoder(nn.Module):
         channels = 64
         model = []
         model += [CrossScaleEmbedding(in_channels, channels,
-                                      kernel_size=[2, 4, 8, 16], stride=2),
+                                      kernel_size=[4, 8, 16, 32], stride=2),
                   nn.InstanceNorm2d(channels * 2),
                   nn.SiLU(inplace=True)]
 
-        for i in range(down_layers - 1):
+        for i in range(1, down_layers):
             model += [CrossScaleEmbedding(channels, channels * 2,
                                           kernel_size=[2, 4], stride=2),
                       nn.InstanceNorm2d(channels * 2),
@@ -39,7 +39,7 @@ class CrossformerDecoder(nn.Module):
                       CrossformerPack(in_channels // 2, group=7, n_layer=i)]
             in_channels //= 2
         model += [CrossScaleEmbedding(in_channels, 16,
-                                      kernel_size=[2, 4, 8, 16], stride=2, reversed=True),
+                                      kernel_size=[4, 8, 16, 32], stride=2, reversed=True),
                   nn.InstanceNorm2d(out_channels),
                   nn.Conv2d(16, out_channels, 1),
                   nn.Tanh()]
