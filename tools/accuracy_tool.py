@@ -1,3 +1,5 @@
+from skimage.metrics import peak_signal_noise_ratio as psnr
+from skimage.metrics import structural_similarity as ssim
 import logging
 import torch
 from ignite.metrics import PSNR, SSIM
@@ -175,15 +177,17 @@ def general_accuracy(metric, result, name):
 
 
 def ssim_accuracy(outputs: torch.Tensor, ground_truth: torch.Tensor, config):
-    metric = SSIM(data_range=1)
-    metric.update([outputs.float(), ground_truth.float()])
-    return metric.compute()
+    outputs = outputs.squeeze().detach().cpu().numpy()
+    ground_truth = ground_truth.squeeze().detach().cpu().numpy()
+    metric = ssim(outputs, ground_truth, data_range=1, channel_axis=0)
+    return metric
 
 
 def psnr_accuracy(outputs: torch.Tensor, ground_truth: torch.Tensor, config):
-    metric = PSNR(data_range=1)
-    metric.update([outputs.float(), ground_truth.float()])
-    return metric.compute()
+    outputs = outputs.squeeze().detach().cpu().numpy()
+    ground_truth = ground_truth.squeeze().detach().cpu().numpy()
+    metric = psnr(outputs, ground_truth, data_range=1)
+    return metric
 
 
 def general_image_metrics(outputs: torch.Tensor, ground_truth: torch.Tensor, config, result=None):

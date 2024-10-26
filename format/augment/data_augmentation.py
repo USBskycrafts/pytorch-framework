@@ -7,6 +7,7 @@ from batchgenerators.dataloading.multi_threaded_augmenter import MultiThreadedAu
 from batchgenerators.transforms.abstract_transforms import Compose
 from batchgenerators.transforms.abstract_transforms import RndTransform
 from batchgenerators.transforms.noise_transforms import GaussianNoiseTransform, GaussianBlurTransform
+from batchgenerators.transforms.sample_normalization_transforms import RangeTransform
 
 from .mask_to_bbox import mask_to_bbox
 
@@ -62,6 +63,15 @@ def get_other_data_augmentation(tensor):
                         gaussian_blur,
                         gaussian_noise
                         ]))
+    return multithreaded_generator
+
+
+def normalize(tensor):
+    bs, *_ = tensor.shape
+    batch = DataLoader(tensor, bs)
+    normalize_transform = RangeTransform()
+    multithreaded_generator = SingleThreadedAugmenter(
+        batch, Compose([normalize_transform]))
     return multithreaded_generator
 
 

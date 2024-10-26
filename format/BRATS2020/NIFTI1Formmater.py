@@ -2,7 +2,7 @@ import logging
 from typing import Dict, List
 import torch
 from format.Basic import BasicFormatter
-from format.augment.data_augmentation import get_spatial_data_augmentation, get_other_data_augmentation
+from format.augment.data_augmentation import get_spatial_data_augmentation, get_other_data_augmentation, normalize
 
 
 class NIFTI1Formatter(BasicFormatter):
@@ -61,4 +61,13 @@ class NIFTI1Formatter(BasicFormatter):
             batch['mask'] = generate_mask(batch['mask'])
             assert torch.le(batch['mask'], 1).all(
             ) and torch.ge(batch['mask'], 0).all()
+
+        aug = normalize(
+            torch.cat([batch['t1'], batch['t2'], batch['t1ce']], dim=1).numpy())
+        aug = next(aug)
+        aug['data'] = torch.from_numpy(aug['data'])
+        t1, t2, t1ce = torch.split(aug['data'], 1, dim=1)
+        batch['t1'] = t1
+        batch['t2'] = t2
+        batch['t1ce'] = t1ce
         return batch

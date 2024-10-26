@@ -12,7 +12,7 @@ class Symbiosis(nn.Module):
     def __init__(self, config, gpu_list, *args, **kwargs):
         super().__init__()
         self.seg = SegmentationNet(2, 3)
-        self.project = GeneratorResNet(4, 1, num_residual_blocks=18)
+        self.project = GeneratorResNet(2, 1, num_residual_blocks=18)
         self.dice_loss = DiceLoss(multiclass=True)
         self.wbce_loss = WeightedBCELoss(7)
         self.l1_loss = nn.L1Loss()
@@ -29,7 +29,11 @@ class Symbiosis(nn.Module):
         }
         raw = self.seg(data)
         logits = torch.sigmoid(raw)
-        pred = self.project(torch.cat([logits, data['t1']], dim=1))
+        enhanced_tumor, *_ = torch.split(logits, 1, dim=1)
+        enhanced_tumor = torch.where(
+            enhanced_tumor > 0.5, enhanced_tumor, torch.zeros_like(enhanced_tumor))
+        pred = self.project(
+            torch.cat([enhanced_tumor.detach(), data['t1']], dim=1))
 
         dice_loss = self.dice_loss(logits, mask)
         wbce_loss = self.wbce_loss(raw, mask)

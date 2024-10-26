@@ -45,13 +45,8 @@ class NIFTI1Loader(Dataset):
                     tensor = tensor.permute(2, 0, 1)
                     return tensor
 
-                def stdandardlize(tensor):
-                    tensor = (tensor - tensor.min()) / \
-                        (tensor.max() - tensor.min())
-                    return tensor
                 T1, T2, T1CE, label = map(load_from_path, [
                     self.t1_dir, self.t2_dir, self.t1ce_dir, self.label_dir], [T1, T2, T1CE, label])
-                T1, T2, T1CE = map(stdandardlize, [T1, T2, T1CE])
                 n_channels, *_ = T1.shape
 
                 T1, T2, T1CE, label = map(lambda x: self.data_process(
