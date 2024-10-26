@@ -14,7 +14,7 @@ class Symbiosis(nn.Module):
         self.seg = SegmentationNet(2, 3)
         self.project = GeneratorResNet(2, 1, num_residual_blocks=9)
         self.dice_loss = DiceLoss(multiclass=True)
-        self.focal_loss = FocalLoss2d()
+        self.bce_loss = nn.BCEWithLogitsLoss()
         self.l1_loss = nn.L1Loss()
 
     def init_multi_gpu(self, device, config, *args, **kwargs):
@@ -27,14 +27,13 @@ class Symbiosis(nn.Module):
             "t1ce": data["t1ce"],
             "t2": data["t2"],
         }
-        raw = self.seg(data)
-        logits = torch.sigmoid(raw)
+        logits = self.seg(data)
         enhanced_tumor, *_ = torch.split(logits, 1, dim=1)
         pred = self.project(
-            torch.cat([enhanced_tumor.detach(), data['t1']], dim=1))
+            torch.cat([enhanced_tumor, data['t1']], dim=1))
 
-        dice_loss = self.dice_loss(logits, mask)
-        bce_loss = self.focal_loss(raw, mask)
+        dice_loss = self.dice_loss(torch.sigmoid(logits), mask)
+        bce_loss = self.bce_loss(logits, mask)
         l1_loss = self.l1_loss(pred, data['t1ce']) * 8
         loss = l1_loss + dice_loss + bce_loss
 
