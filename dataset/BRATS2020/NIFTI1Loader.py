@@ -8,6 +8,7 @@ from typing import List
 from tqdm.contrib import tzip
 from .filter import BraTS2020Filter
 import torch.nn.functional as F
+from torchvision.transforms import Compose, Normalize
 
 
 class NIFTI1Loader(Dataset):
@@ -45,8 +46,20 @@ class NIFTI1Loader(Dataset):
                     tensor = tensor.permute(2, 0, 1)
                     return tensor
 
+                def normalize(tensor: torch.Tensor) -> torch.Tensor:
+                    tensor = (tensor - tensor.min()) / \
+                        (tensor.max() - tensor.min())
+                    transforms = Compose([
+                        Normalize(mean=[0.5], std=[0.5])
+                    ])
+                    tensor = transforms(tensor)
+                    return tensor
+
                 T1, T2, T1CE, label = map(load_from_path, [
                     self.t1_dir, self.t2_dir, self.t1ce_dir, self.label_dir], [T1, T2, T1CE, label])
+
+                T1, T2, T1CE = map(normalize, [T1, T2, T1CE])
+
                 n_channels, *_ = T1.shape
 
                 T1, T2, T1CE, label = map(lambda x: self.data_process(
