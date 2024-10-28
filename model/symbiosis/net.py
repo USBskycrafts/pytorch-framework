@@ -8,7 +8,7 @@ from model.residual.res_net import GeneratorResNet
 class Symbiosis(nn.Module):
     def __init__(self, config, gpu_list, *args, **kwargs):
         super().__init__()
-        self.model = GeneratorResNet(2, 1, 12)
+        self.model = GeneratorResNet(2, 1, 24)
         self.l1_loss = nn.L1Loss()
         print(self)
 
