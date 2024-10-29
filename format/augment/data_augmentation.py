@@ -13,13 +13,7 @@ from .mask_to_bbox import mask_to_bbox
 
 def get_spatial_data_augmentation(tensor):
     bs, c, h, w = tensor.shape
-    mask = tensor[:, 3]
-    bboxes = [mask_to_bbox(x) for x in np.split(mask, bs, axis=0)]
-    bboxes = [bbox for bbox in bboxes if bbox]
     center = np.array([h // 2, w // 2])
-    if len(bboxes) > 0:
-        center_points = [bbox[0] for bbox in bboxes]
-        center = np.mean(center_points, axis=0)
     batch = DataLoader(tensor, bs)
     spatial_transform = SpatialTransform((h, w), center,
                                          do_elastic_deform=True, alpha=(0., 1500.), sigma=(30., 50.),

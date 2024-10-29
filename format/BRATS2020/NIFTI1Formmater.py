@@ -16,7 +16,6 @@ class NIFTI1Formatter(BasicFormatter):
         t1_list = [t1 for t1 in map(lambda x: x['t1'], data)]
         t2_list = [t2 for t2 in map(lambda x: x['t2'], data)]
         t1ce_list = [t1ce for t1ce in map(lambda x: x['t1ce'], data)]
-        mask_list = [mask for mask in map(lambda x: x['mask'], data)]
         number_list = [number for number in map(lambda x: x['number'], data)]
         layer_list = [number for number in map(lambda x: x['layer'], data)]
 
@@ -33,18 +32,17 @@ class NIFTI1Formatter(BasicFormatter):
             't1': torch.stack(t1_list, dim=0),
             't2': torch.stack(t2_list, dim=0),
             't1ce': torch.stack(t1ce_list, dim=0),
-            'mask': torch.stack(mask_list, dim=0),
             'number': torch.stack(number_list, dim=0),
             'layer': torch.stack(layer_list, dim=0),
         }
         if mode == 'train':
             aug = get_spatial_data_augmentation(
                 torch.cat([batch['t1'], batch['t2'],
-                          batch['t1ce'], batch['mask']], dim=1).numpy(),
+                          batch['t1ce']], dim=1).numpy(),
             )
             aug = next(aug)
             aug['data'] = torch.from_numpy(aug['data'])
-            t1, t2, t1ce, mask = torch.split(aug['data'], 1, dim=1)
+            t1, t2, t1ce = torch.split(aug['data'], 1, dim=1)
             # aug = get_other_data_augmentation(
             #     torch.cat([batch['t1'], batch['t2'],
             #                batch['t1ce']], dim=1).numpy())
@@ -55,7 +53,6 @@ class NIFTI1Formatter(BasicFormatter):
             batch['t1'] = t1
             batch['t2'] = t2
             batch['t1ce'] = t1ce
-            batch['mask'] = mask
             # batch['mask'] = (mask := generate_mask(mask))
             # assert torch.le(mask, 1).all() and torch.ge(mask, 0).all()
         # else:

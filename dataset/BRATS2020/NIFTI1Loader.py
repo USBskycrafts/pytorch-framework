@@ -8,7 +8,7 @@ from typing import List
 from tqdm.contrib import tzip
 from .filter import BraTS2020Filter
 import torch.nn.functional as F
-from torchvision.transforms import Compose, Normalize
+from torchvision.transforms import Compose, Normalize, Resize
 
 
 class NIFTI1Loader(Dataset):
@@ -19,7 +19,6 @@ class NIFTI1Loader(Dataset):
         self.t1_dir = config.get("data", "%s_t1_dir" % mode)
         self.t2_dir = config.get("data", "%s_t2_dir" % mode)
         self.t1ce_dir = config.get("data", "%s_t1ce_dir" % mode)
-        self.label_dir = config.get("data", "%s_label_dir" % mode)
         self.logger = logging.getLogger(__name__)
         self.input_dim = config.getint("model", "input_dim")
         self.output_dim = config.getint("model", "output_dim")
@@ -28,11 +27,10 @@ class NIFTI1Loader(Dataset):
 
         pbar = tzip(sorted(os.listdir(self.t1_dir)),
                     sorted(os.listdir(self.t2_dir)),
-                    sorted(os.listdir(self.t1ce_dir)),
-                    sorted(os.listdir(self.label_dir)))
+                    sorted(os.listdir(self.t1ce_dir)))
         cnt = 0
-        for T1, T2, T1CE, label in pbar:
-            if T1.endswith(".nii") and T2.endswith(".nii") and T1CE.endswith(".nii") and label.endswith(".nii"):
+        for T1, T2, T1CE in pbar:
+            if T1.endswith(".nii") and T2.endswith(".nii") and T1CE.endswith(".nii"):
                 number = int(T1.split("_")[2])
                 if not self.filter(number - 1):
                     continue
@@ -50,28 +48,28 @@ class NIFTI1Loader(Dataset):
                     tensor = (tensor - tensor.min()) / \
                         (tensor.max() - tensor.min())
                     transforms = Compose([
-                        Normalize(mean=[0.5], std=[0.5])
+                        Normalize(mean=[0.5], std=[0.5]),
+                        Resize([256, 256])
                     ])
                     tensor = transforms(tensor)
                     return tensor
 
-                T1, T2, T1CE, label = map(load_from_path, [
-                    self.t1_dir, self.t2_dir, self.t1ce_dir, self.label_dir], [T1, T2, T1CE, label])
+                T1, T2, T1CE= map(load_from_path, [
+                    self.t1_dir, self.t2_dir, self.t1ce_dir], [T1, T2, T1CE])
 
                 T1, T2, T1CE = map(normalize, [T1, T2, T1CE])
 
                 n_channels, *_ = T1.shape
 
-                T1, T2, T1CE, label = map(lambda x: self.data_process(
-                    x, config, mode, *args, **kwargs), [T1, T2, T1CE, label])
+                T1, T2, T1CE= map(lambda x: self.data_process(
+                    x, config, mode, *args, **kwargs), [T1, T2, T1CE])
                 self.data_list.extend({
                     "t1": t1,
                     "t2": t2,
                     "t1ce": t1ce,
-                    "mask": mask,
                     "number": torch.tensor(number),
                     "layer": torch.tensor(i + n_channels // 2 - n_channels // 4)
-                } for i, (t1, t2, t1ce, mask) in enumerate(zip(T1, T2, T1CE, label)))
+                } for i, (t1, t2, t1ce) in enumerate(zip(T1, T2, T1CE)))
         self.logger.info("Loaded %d %s data" % (cnt, mode))
 
     def __getitem__(self, index):
@@ -83,7 +81,6 @@ class NIFTI1Loader(Dataset):
     def data_process(self, data: torch.Tensor, config, mode, *args, **params) -> List[torch.Tensor]:
         # TODO: 1. crop from 155 to 16 in channels(using the middle half channels)
         #       2. resize the shape from 240x240 to 64x64 for training
-        data = self.size_process(data, config, mode, *args, **params)
         data_list = self.channel_process(data, config, mode, *args, **params)
         return data_list
 
@@ -99,10 +96,4 @@ class NIFTI1Loader(Dataset):
             data_list.pop()
         return data_list
 
-    def size_process(self, data: torch.Tensor, config, mode, *args, **params) -> torch.Tensor:
-        if mode == 'train':
-            return data[:, 8:232, 8:232]
-        elif mode == 'valid':
-            return data[:, 8:232, 8:232]
-        else:
-            return data
+   
