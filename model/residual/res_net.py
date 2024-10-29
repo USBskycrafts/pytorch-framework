@@ -16,7 +16,7 @@ class GeneratorResNet(nn.Module):
         model = [  # model = [Pad + Conv + Norm + ReLU]
             # ReflectionPad2d(3):利用输入边界的反射来填充输入张量
             nn.ReflectionPad2d(3),
-            nn.Conv2d(channels, out_features, 7),  # Conv2d(3, 64, 7)
+            DeformConv2dPack(channels, out_features, 7),  # Conv2d(3, 64, 7)
             # InstanceNorm2d(64):在图像像素上对HW做归一化，用在风格化迁移
             nn.InstanceNorm2d(out_features),
             nn.LeakyReLU(inplace=True),  # 非线性激活

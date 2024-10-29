@@ -8,7 +8,7 @@ from model.residual.res_net import GeneratorResNet
 class Symbiosis(nn.Module):
     def __init__(self, config, gpu_list, *args, **kwargs):
         super().__init__()
-        self.model = GeneratorResNet(2, 1)
+        self.model = GeneratorResNet(1, 1, 14)
         self.l1_loss = nn.L1Loss()
         print(self)
 
@@ -19,9 +19,8 @@ class Symbiosis(nn.Module):
         data = {
             "t1": data["t1"],
             "t1ce": data["t1ce"],
-            "t2": data["t2"],
         }
-        pred = self.model(torch.cat([data["t1"], data["t2"]], dim=1))
+        pred = self.model(data["t1"])
         loss = self.l1_loss(pred, data['t1ce'])
         acc_result = general_image_metrics(
             pred, data["t1ce"], config, acc_result)
