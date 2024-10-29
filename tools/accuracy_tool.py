@@ -176,14 +176,14 @@ def general_accuracy(metric, result, name):
     return result
 
 
-def ssim_accuracy(outputs: torch.Tensor, ground_truth: torch.Tensor, config):
+def ssim_accuracy(outputs, ground_truth, config):
     outputs = outputs.squeeze().detach().cpu().numpy()
     ground_truth = ground_truth.squeeze().detach().cpu().numpy()
     metric = ssim(outputs, ground_truth, data_range=2, channel_axis=0)
     return metric
 
 
-def psnr_accuracy(outputs: torch.Tensor, ground_truth: torch.Tensor, config):
+def psnr_accuracy(outputs, ground_truth, config):
     outputs = outputs.squeeze().detach().cpu().numpy()
     ground_truth = ground_truth.squeeze().detach().cpu().numpy()
     metric = psnr(outputs, ground_truth, data_range=2)
