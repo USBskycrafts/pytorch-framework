@@ -8,7 +8,7 @@ from model.residual.res_net import GeneratorResNet
 class Symbiosis(nn.Module):
     def __init__(self, config, gpu_list, *args, **kwargs):
         super().__init__()
-        self.model = GeneratorResNet(2, 2, 14)
+        self.model = GeneratorResNet(2, 2)
         self.l1_loss = nn.L1Loss()
         print(self)
 
@@ -21,13 +21,16 @@ class Symbiosis(nn.Module):
             "t1ce": data["t1ce"],
         }
         t1_freq = torch.fft.fft2(data["t1"])
-        t1_r, t1_imag = torch.real(t1_freq), torch.imag(t1_freq)
-        pred_freq = self.model(torch.cat([t1_r, t1_imag], dim=1))
-        pred_freq = torch.complex(pred_freq[:, :1, :, :], pred_freq[:, 1:, :, :])
-        pred = torch.fft.ifft2(pred_freq) 
-        loss = self.l1_loss(pred.real, data['t1ce']) + self.l1_loss(pred.imag, torch.zeros_like(data['t1ce']))
+        t1ce_freq = torch.fft.fft2(data["t1ce"])
+        filter = self.model(
+            torch.cat([t1_freq.abs(), t1_freq.angle()], dim=1))
+        filter_abs, filter_angle = torch.split(filter, 1, dim=1)
+        loss = self.l1_loss(t1_freq.abs() * filter_abs, t1ce_freq.abs()) \
+            + self.l1_loss(t1_freq.angle() + filter_angle, t1ce_freq.angle())
+        pred = torch.fft.ifft2(t1_freq * filter_abs *
+                               torch.exp(1j * (t1_freq.angle() + filter_angle)))
         acc_result = general_image_metrics(
-            pred.real, data["t1ce"], config, acc_result)
+            pred.abs().float(), data["t1ce"], config, acc_result)
 
         return {
             "loss": loss,

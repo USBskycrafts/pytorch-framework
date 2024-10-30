@@ -48,20 +48,20 @@ class NIFTI1Loader(Dataset):
                     tensor = (tensor - tensor.min()) / \
                         (tensor.max() - tensor.min())
                     transforms = Compose([
-                        Normalize(mean=[0.5], std=[0.5]),
+                        # Normalize(mean=[0.5], std=[0.5]),
                         Resize([256, 256])
                     ])
                     tensor = transforms(tensor)
                     return tensor
 
-                T1, T2, T1CE= map(load_from_path, [
+                T1, T2, T1CE = map(load_from_path, [
                     self.t1_dir, self.t2_dir, self.t1ce_dir], [T1, T2, T1CE])
 
                 T1, T2, T1CE = map(normalize, [T1, T2, T1CE])
 
                 n_channels, *_ = T1.shape
 
-                T1, T2, T1CE= map(lambda x: self.data_process(
+                T1, T2, T1CE = map(lambda x: self.data_process(
                     x, config, mode, *args, **kwargs), [T1, T2, T1CE])
                 self.data_list.extend({
                     "t1": t1,
@@ -95,5 +95,3 @@ class NIFTI1Loader(Dataset):
         if data_list[-1].shape[0] < input_dim:
             data_list.pop()
         return data_list
-
-   
