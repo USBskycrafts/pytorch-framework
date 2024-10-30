@@ -42,7 +42,7 @@ class Printer:
                 ax.set_title(
                     modal + f"#{mark['number']}, {mark['layer']}")
                 ax.axis('off')
-                ax.imshow(image, cmap='gray', vmin=-1, vmax=1)
+                ax.imshow(image, cmap='gray', vmin=0, vmax=1)
             fig.tight_layout()
             plt.savefig(f"{self.path}/{self.model_name}/{mark['number']}-{mark['layer']}.png",
                         bbox_inches='tight', dpi=500)

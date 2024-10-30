@@ -33,11 +33,11 @@ class Symbiosis(nn.Module):
                                    torch.exp(1j * (t1_freq.angle() + filter_angle)), dim=(2, 3))
         pred = torch.fft.ifft2(pred)
         acc_result = general_image_metrics(
-            pred.abs().float(), data["t1ce"], config, acc_result)
+            pred.real, data["t1ce"], config, acc_result)
 
         return {
             "loss": loss,
             "acc_result": acc_result,
             "output": [acc_result["PSNR"]],
-            "pred": pred
+            "pred": pred.real
         }
