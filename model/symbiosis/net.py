@@ -1,14 +1,17 @@
 import torch
 import torch.nn as nn
-
+from .backbone import Backbone
 from tools.accuracy_tool import general_accuracy, general_image_metrics
-from model.residual.res_net import GeneratorResNet
 
 
 class Symbiosis(nn.Module):
-    def __init__(self, config, gpu_list, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__()
-        self.model = GeneratorResNet(2, 2)
+        self.model = Backbone(
+            in_channels=2,
+            out_channels=2,
+            num_layers=18,
+        )
         self.l1_loss = nn.L1Loss()
         print(self)
 
@@ -26,11 +29,12 @@ class Symbiosis(nn.Module):
         t1ce_freq = torch.fft.fftshift(t1ce_freq, dim=(2, 3))
         filter = self.model(
             torch.cat([t1_freq.abs(), t1_freq.angle()], dim=1))
-        filter_abs, filter_angle = torch.split(filter, 1, dim=1)
-        loss = self.l1_loss(t1_freq.abs() * filter_abs, t1ce_freq.abs()) \
-            + self.l1_loss(t1_freq.angle() + filter_angle, t1ce_freq.angle())
-        pred = torch.fft.ifftshift(t1_freq.abs() * filter_abs *
-                                   torch.exp(1j * (t1_freq.angle() + filter_angle)), dim=(2, 3))
+        pred_abs, pred_angle = torch.split(filter, 1, dim=1)
+        pred_angle = 2 * torch.pi * pred_angle
+        loss = self.l1_loss(pred_abs, t1ce_freq.abs()) \
+            + self.l1_loss(pred_angle, t1ce_freq.angle())
+        pred = torch.fft.ifftshift(pred_abs *
+                                   torch.exp(1j * pred_angle), dim=(2, 3))
         pred = torch.fft.ifft2(pred)
         acc_result = general_image_metrics(
             pred.real, data["t1ce"], config, acc_result)

@@ -96,20 +96,20 @@ def train(parameters, config, gpu_list, do_test=False):
 
             optimizer.zero_grad()
 
-            # with autocast():
-            results = model(data, config, gpu_list, acc_result, "train")
-            loss, acc_result = results["loss"], results["acc_result"]
-            total_loss += float(loss)
-            loss.backward()
-            optimizer.step()
+            with autocast():
+                results = model(data, config, gpu_list, acc_result, "train")
+                loss, acc_result = results["loss"], results["acc_result"]
+            # total_loss += float(loss)
+            # loss.backward()
+            # optimizer.step()
 
-            # if isinstance(scaled_loss := scaler.scale(loss), torch.Tensor):
-            #     scaled_loss.backward()
-            #     total_loss += float(loss)
-            # else:
-            #     raise TypeError("Loss is not a tensor")
-            # scaler.step(optimizer)
-            # scaler.update()
+            if isinstance(scaled_loss := scaler.scale(loss), torch.Tensor):
+                scaled_loss.backward()
+                total_loss += float(loss)
+            else:
+                raise TypeError("Loss is not a tensor")
+            scaler.step(optimizer)
+            scaler.update()
 
             if step % output_time == 0:
                 output_info = output_function(acc_result, config)
