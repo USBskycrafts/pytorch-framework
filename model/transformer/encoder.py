@@ -18,10 +18,8 @@ class TransformerEncoderLayer(nn.Module):
 
     def forward(self, x, mask=None):
         # x: (batch_size, seq_len, d_model)
-        x = self.norm1(x)
-        x = x + self.attn(x, mask=mask)
-        x = self.norm2(x)
-        x = x + self.feedforward(x)
+        x = x + self.attn(self.norm1(x), mask=mask)
+        x = x + self.feedforward(self.norm2(x))
         return x
 
 

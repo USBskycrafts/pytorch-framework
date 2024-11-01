@@ -21,7 +21,6 @@ class Backbone(nn.Module):
         )
         self.out_proj = nn.Sequential(
             nn.Linear(d_model, d_model // 2),
-            nn.Sigmoid()
         )
         self.pos_embedding = nn.Parameter(torch.zeros(1, 1, d_model))
 

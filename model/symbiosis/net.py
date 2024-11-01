@@ -30,18 +30,19 @@ class Symbiosis(nn.Module):
         filter = self.model(
             torch.cat([t1_freq.abs(), t1_freq.angle()], dim=1))
         pred_abs, pred_angle = torch.split(filter, 1, dim=1)
-        pred_angle = 2 * torch.pi * pred_angle
+        pred_angle = 2 * torch.pi * torch.sigmoid(pred_angle)
+        pred_abs = torch.relu(pred_abs)
         loss = self.l1_loss(pred_abs, t1ce_freq.abs()) \
             + self.l1_loss(pred_angle, t1ce_freq.angle())
-        pred = torch.fft.ifftshift(pred_abs *
-                                   torch.exp(1j * pred_angle), dim=(2, 3))
-        pred = torch.fft.ifft2(pred)
+        pred = torch.fft.ifftshift(pred_abs.float() *
+                                   torch.exp(1j * pred_angle.float()), dim=(2, 3))
+        pred = torch.fft.ifft2(pred).abs()
         acc_result = general_image_metrics(
-            pred.real, data["t1ce"], config, acc_result)
+            pred, data["t1ce"], config, acc_result)
 
         return {
             "loss": loss,
             "acc_result": acc_result,
             "output": [acc_result["PSNR"]],
-            "pred": pred.real
+            "pred": pred
         }
