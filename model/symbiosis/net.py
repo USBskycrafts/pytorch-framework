@@ -10,7 +10,7 @@ class Symbiosis(nn.Module):
         self.model = Backbone(
             in_channels=2,
             out_channels=2,
-            num_layers=18,
+            num_layers=36,
         )
         self.l1_loss = nn.L1Loss()
         print(self)

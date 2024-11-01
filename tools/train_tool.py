@@ -136,8 +136,6 @@ def train(parameters, config, gpu_list, do_test=False):
                 "There is no data given to the model in this epoch, check your data.")
             raise NotImplementedError
 
-        checkpoint(os.path.join(output_path, "%d.pkl" % current_epoch), model, optimizer, current_epoch, config,
-                   global_step)
         writer.add_scalar(config.get("output", "model_name") + "_train_epoch", float(total_loss) / (step + 1),
                           current_epoch)
 
@@ -148,3 +146,5 @@ def train(parameters, config, gpu_list, do_test=False):
                 if do_test:
                     valid(model, test_dataset, current_epoch, writer,
                           config, gpu_list, output_function, mode="test")
+            checkpoint(os.path.join(output_path, "%d.pkl" % current_epoch), model, optimizer, current_epoch, config,
+                       global_step)
