@@ -24,9 +24,9 @@ class Symbiosis(nn.Module):
             "t1ce": data["t1ce"],
         }
         t1_freq = torch.fft.fft2(data["t1"])
-        t1_freq = torch.fft.fftshift(t1_freq, dim=(2, 3))
+        t1_freq = torch.fft.fftshift(t1_freq, dim=(2, 3)).detach()
         t1ce_freq = torch.fft.fft2(data["t1ce"])
-        t1ce_freq = torch.fft.fftshift(t1ce_freq, dim=(2, 3))
+        t1ce_freq = torch.fft.fftshift(t1ce_freq, dim=(2, 3)).detach()
         filter = self.model(
             torch.cat([t1_freq.abs(), t1_freq.angle()], dim=1))
         pred_abs, pred_angle = torch.split(filter, 1, dim=1)
