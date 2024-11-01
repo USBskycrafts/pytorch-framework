@@ -27,4 +27,12 @@ class BraTSCollateFormatter(DictionaryCollateFormatter):
                 transforms.RandomVerticalFlip(p=0.1),
             ]))
             batch['T1'], batch['T2'], batch['T1ce'] = atlas['T1'], atlas['T2'], atlas['T1ce']
+        else:
+            atlas = {k: v for k, v in batch.items() if k in [
+                'T1', 'T2', 'T1ce']}
+            atlas = batch_process(atlas, transforms.Compose([
+                transforms.Resize(
+                    (256, 256), interpolation=F.InterpolationMode.BILINEAR),
+            ]))
+            batch['T1'], batch['T2'], batch['T1ce'] = atlas['T1'], atlas['T2'], atlas['T1ce']
         return batch
