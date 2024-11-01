@@ -5,7 +5,7 @@ from model.transformer.encoder import TransformerEncoder
 
 
 class Backbone(nn.Module):
-    def __init__(self, in_channels, out_channels, num_layers, d_model=256, num_heads=8, dim_feedforward=2048, dropout=0.1):
+    def __init__(self, in_channels, out_channels, num_layers, d_model=256, num_heads=2, dim_feedforward=2048, dropout=0.1):
         super().__init__()
         self.encoder = TransformerEncoder(
             num_layers=num_layers,

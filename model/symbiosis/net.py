@@ -20,8 +20,8 @@ class Symbiosis(nn.Module):
 
     def forward(self, data, config, gpu_list, acc_result, mode):
         data = {
-            "t1": data["t1"],
-            "t1ce": data["t1ce"],
+            "t1": data["T1"],
+            "t1ce": data["T1ce"],
         }
         t1_freq = torch.fft.fft2(data["t1"])
         t1_freq = torch.fft.fftshift(t1_freq, dim=(2, 3)).detach()
