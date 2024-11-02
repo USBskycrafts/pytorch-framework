@@ -2,6 +2,7 @@ import torch.optim as optim
 from torch.optim.adam import Adam
 from torch.optim.sgd import SGD
 from torch.optim.adamw import AdamW
+from torch_optimizer import AdaBound
 
 
 def init_optimizer(model, config, *args, **params):
@@ -12,11 +13,21 @@ def init_optimizer(model, config, *args, **params):
                          weight_decay=config.getfloat("train", "weight_decay"))
     elif optimizer_type == "sgd":
         optimizer = SGD(model.parameters(), lr=learning_rate,
-                        weight_decay=config.getfloat("train", "weight_decay"))
+                        weight_decay=config.getfloat("train", "weight_decay"),
+                        momentum=config.getfloat("train", "momentum"),
+                        nesterov=config.getboolean("train", "nesterov"))
+
     elif optimizer_type == 'adamw':
         optimizer = AdamW(model.parameters(), lr=learning_rate,
-                          weight_decay=config.getfloat("train", "weight_decay"))
+                          weight_decay=config.getfloat(
+                              "train", "weight_decay"))
+    elif optimizer_type == 'ada-bound':
+        optimizer = AdaBound(
+            model.parameters(),
+            lr=learning_rate,
+            weight_decay=config.getfloat("train", "weight_decay"),
+            amsbound=True
+        )
     else:
         raise NotImplementedError
-
     return optimizer

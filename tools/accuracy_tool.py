@@ -1,3 +1,5 @@
+from skimage.metrics import peak_signal_noise_ratio as psnr
+from skimage.metrics import structural_similarity as ssim
 import logging
 import torch
 from ignite.metrics import PSNR, SSIM
@@ -163,18 +165,29 @@ def single_label_top2_accuracy(outputs, label, config, result=None):
     return result
 
 
-def ssim_accuracy(outputs: torch.Tensor, ground_truth: torch.Tensor, config):
-    data_range = config.getint("data", "normalization")
-    metric = SSIM(data_range=data_range)
-    metric.update([outputs, ground_truth])
-    return metric.compute() * 100
+def general_accuracy(metric, result, name):
+    if result is None:
+        result = {
+            name: []
+        }
+    if result.get(name) is None:
+        result[name] = []
+    result[name].append(metric)
+    return result
 
 
-def psnr_accuracy(outputs: torch.Tensor, ground_truth: torch.Tensor, config):
-    data_range = config.getint("data", "normalization")
-    metric = PSNR(data_range=data_range)
-    metric.update([outputs, ground_truth])
-    return metric.compute()
+def ssim_accuracy(outputs, ground_truth, config):
+    outputs = outputs.squeeze().detach().cpu().numpy()
+    ground_truth = ground_truth.squeeze().detach().cpu().numpy()
+    metric = ssim(outputs, ground_truth, data_range=1, channel_axis=0)
+    return metric
+
+
+def psnr_accuracy(outputs, ground_truth, config):
+    outputs = outputs.squeeze().detach().cpu().numpy()
+    ground_truth = ground_truth.squeeze().detach().cpu().numpy()
+    metric = psnr(outputs, ground_truth, data_range=1)
+    return metric
 
 
 def general_image_metrics(outputs: torch.Tensor, ground_truth: torch.Tensor, config, result=None):
@@ -183,6 +196,10 @@ def general_image_metrics(outputs: torch.Tensor, ground_truth: torch.Tensor, con
             "PSNR": [],
             "SSIM": []
         }
+    if result.get("PSNR") is None:
+        result["PSNR"] = []
+    if result.get("SSIM") is None:
+        result["SSIM"] = []
     psnr = psnr_accuracy(outputs, ground_truth, config)
     ssim = ssim_accuracy(outputs, ground_truth, config)
     result["PSNR"].append(psnr)

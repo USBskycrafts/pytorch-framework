@@ -8,7 +8,8 @@ from timeit import default_timer as timer
 
 from tools.eval_tool import valid, gen_time_str, output_value
 from tools.init_tool import init_test_dataset, init_formatter
-
+from torch.cuda.amp.autocast_mode import autocast
+from torch.cuda.amp.grad_scaler import GradScaler
 logger = logging.getLogger(__name__)
 
 
@@ -61,10 +62,8 @@ def train(parameters, config, gpu_list, do_test=False):
     os.makedirs(os.path.join(config.get("output", "tensorboard_path"), config.get("output", "model_name")),
                 exist_ok=True)
 
-    step_size = config.getint("train", "step_size")
-    gamma = config.getfloat("train", "lr_multiplier")
-    exp_lr_scheduler = lr_scheduler.StepLR(
-        optimizer, step_size=step_size, gamma=gamma)
+    exp_lr_scheduler = lr_scheduler.PolynomialLR(
+        optimizer, total_iters=epoch, power=config.getfloat("train", "lr_power"))
 
     logger.info("Training start....")
 
@@ -72,6 +71,7 @@ def train(parameters, config, gpu_list, do_test=False):
                  "Loss",   "Output Information", '\n', config)
 
     total_len = len(dataset)
+    scaler = GradScaler()
     more = ""
     if total_len < 10000:
         more = "\t"
@@ -85,6 +85,7 @@ def train(parameters, config, gpu_list, do_test=False):
 
         output_info = ""
         step = -1
+        print(f"learning rate: {exp_lr_scheduler.get_last_lr()}", end='\r')
         for step, data in enumerate(dataset):
             for key in data.keys():
                 if isinstance(data[key], torch.Tensor):
@@ -95,14 +96,20 @@ def train(parameters, config, gpu_list, do_test=False):
 
             optimizer.zero_grad()
 
-            results = model(data, config, gpu_list, acc_result, "train")
+            with autocast():
+                results = model(data, config, gpu_list, acc_result, "train")
+                loss, acc_result = results["loss"], results["acc_result"]
+            # total_loss += float(loss)
+            # loss.backward()
+            # optimizer.step()
 
-            loss, acc_result = results["loss"], results["acc_result"]
-            total_loss += float(loss)
-
-            loss.backward()
-            optimizer.step()
-            exp_lr_scheduler.step()
+            if isinstance(scaled_loss := scaler.scale(loss), torch.Tensor):
+                scaled_loss.backward()
+                total_loss += float(loss)
+            else:
+                raise TypeError("Loss is not a tensor")
+            scaler.step(optimizer)
+            scaler.update()
 
             if step % output_time == 0:
                 output_info = output_function(acc_result, config)
@@ -117,6 +124,7 @@ def train(parameters, config, gpu_list, do_test=False):
             writer.add_scalar(config.get("output", "model_name") +
                               "_train_iter", float(loss), global_step)
 
+        exp_lr_scheduler.step()
         output_info = output_function(acc_result, config)
         delta_t = timer() - start_time
         output_value(current_epoch, "train", "%d/%d" % (step + 1, total_len), "%s/%s" % (
@@ -128,8 +136,6 @@ def train(parameters, config, gpu_list, do_test=False):
                 "There is no data given to the model in this epoch, check your data.")
             raise NotImplementedError
 
-        checkpoint(os.path.join(output_path, "%d.pkl" % current_epoch), model, optimizer, current_epoch, config,
-                   global_step)
         writer.add_scalar(config.get("output", "model_name") + "_train_epoch", float(total_loss) / (step + 1),
                           current_epoch)
 
@@ -140,3 +146,5 @@ def train(parameters, config, gpu_list, do_test=False):
                 if do_test:
                     valid(model, test_dataset, current_epoch, writer,
                           config, gpu_list, output_function, mode="test")
+            checkpoint(os.path.join(output_path, "%d.pkl" % current_epoch), model, optimizer, current_epoch, config,
+                       global_step)

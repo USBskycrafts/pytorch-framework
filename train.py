@@ -6,6 +6,7 @@ import logging
 from tools.init_tool import init_all
 from config_parser import create_config
 from tools.train_tool import train
+from torch.distributed import init_process_group, get_rank
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                     datefmt='%m/%d/%Y %H:%M:%S',
@@ -15,10 +16,12 @@ logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', '-c', help="specific config file", required=True)
+    parser.add_argument(
+        '--config', '-c', help="specific config file", required=True)
     parser.add_argument('--gpu', '-g', help="gpu id list")
     parser.add_argument('--checkpoint', help="checkpoint file path")
-    parser.add_argument('--do_test', help="do test while training or not", action="store_true")
+    parser.add_argument(
+        '--do_test', help="do test while training or not", action="store_true")
     parser.add_argument('--local_rank', help='local rank', default=0)
     args = parser.parse_args()
 
@@ -26,9 +29,12 @@ if __name__ == "__main__":
 
     config = create_config(configFilePath)
     if config.getboolean("distributed", "use"):
-        torch.distributed.init_process_group(
+        init_process_group(
             backend=config.get("distributed", "backend")
         )
+        local_rank = get_rank()
+        torch.cuda.set_device(local_rank)
+        device = torch.device("cuda", local_rank)
 
     use_gpu = True
     gpu_list = []
@@ -41,8 +47,6 @@ if __name__ == "__main__":
         device_list = args.gpu.split(",")
         for a in range(0, len(device_list)):
             gpu_list.append(int(a))
-
-    os.system("clear")
 
     cuda = torch.cuda.is_available()
     logger.info("CUDA available: %s" % str(cuda))

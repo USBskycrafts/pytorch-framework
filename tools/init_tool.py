@@ -35,7 +35,7 @@ def init_all(config, gpu_list, checkpoint, mode, *args, **params):
         model = model.cuda()
 
         try:
-            model.init_multi_gpu(gpu_list, config, *args, **params)
+            model = torch.nn.parallel.DistributedDataParallel(model)
         except Exception as e:
             logger.warning(
                 "No init_multi_gpu implemented in the model, use single gpu instead.")

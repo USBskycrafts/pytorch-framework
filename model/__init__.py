@@ -1,5 +1,7 @@
+from .template.net import TemplateNet
 
 model_list = {
+    "symbiosis": TemplateNet
 }
 
 

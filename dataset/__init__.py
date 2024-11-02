@@ -1,5 +1,6 @@
-from .BRATS2020.NIFTI1Loader import NIFTI1Loader
+from dataset.BraTS.dataset import BraTSDataset
 
 dataset_list = {
-    "NIFTI": NIFTI1Loader
+    "BraTS2020": BraTSDataset,
+    "BraTS2020": BraTSDataset
 }
