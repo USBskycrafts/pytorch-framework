@@ -1,11 +1,12 @@
 import logging
-from format.BraTS.collate import BraTSCollateFormatter
+from format.BraTS.collate import BraTSCollateFormatter, BraTSBaseFormatter
 
 logger = logging.getLogger(__name__)
 
 formatter_list = {
     "BraTS2020": BraTSCollateFormatter,
-    "BraTS2021": BraTSCollateFormatter
+    "BraTS2021": BraTSCollateFormatter,
+    "BraTSBase": BraTSBaseFormatter
 }
 
 
