@@ -33,7 +33,7 @@ class Printer:
         for images in arrays:
             fig, axes = plt.subplots(1, 4)
             view = [(modal, image) for modal, image in zip(
-                modals, images) if modal in ['t1', 't2', 't1ce', 'pred']]
+                modals, images) if modal in ['T1', 'T2', 'T1ce', 'pred']]
             mark = {key: label.item() for key, label in zip(
                 modals, images) if key in ['number', 'layer']}
             for i, (modal, image) in enumerate(view):
